@@ -1,0 +1,35 @@
+{
+    "metadata": [
+        {
+            "enabled": false,
+            "installBehavior": "SYSTEM",
+            "guid": "{C2511496-D83B-48E4-9636-FAB21CB47517}",
+            "title": "Windows rhythm",
+            "description": "Baseline Windows Services configuration settings",
+            "url": "",
+            "version": "1.0.0.0",
+            "date": "2021-09-12",
+            "publisher": "dotjesper.com",
+            "developer": "Jesper Nielsen"
+        }
+    ],
+    "windowsServices": [
+        {
+            "enabled": false,
+            "services": [
+                {
+                    "Name": "XboxGipSvc",
+                    "DisplayName": "Xbox Accessory Management Service",
+                    "StartType": "Manual",
+                    "StopIfRunning": false
+                },
+                {
+                    "Name": "XboxNetApiSvc",
+                    "DisplayName": "Xbox Live Networking Service",
+                    "StartType": "Manual",
+                    "StopIfRunning": false
+                }
+            ]
+        }
+    ]
+}
