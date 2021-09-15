@@ -148,6 +148,12 @@
                     "DisplayName": "Microsoft.ZuneVideo",
                     "Remove": true,
                     "RemoveProvisionedPackage": true
+                },
+                {
+                    "Name": "Microsoft Teams",
+                    "DisplayName": "MicrosoftTeams",
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 }
             ]
         }
