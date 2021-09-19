@@ -1,7 +1,8 @@
 ---
 Title: README 
-Date: September 14, 2021
+Date: September 19, 2021
 Author: dotjesper
+Status: In development
 ---
 # Windows rhythm
 
