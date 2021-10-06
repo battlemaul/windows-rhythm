@@ -1,6 +1,6 @@
 ---
 Title: README 
-Date: September 19, 2021
+Date: October 5, 2021
 Author: dotjesper
 Status: In development
 ---
@@ -13,15 +13,18 @@ According to Wikipedia, Rhythm means a *"movement marked by the regulated succes
 
 Windows rhythm is exactly that, a multifunctional script designed to add pulse to Windows management beats.
 
-Do not hesitate to reach out if issues arise or new functionality and improvement comes to mind. Feel free to fork and build.
+This repository is under development and alive and for the most, kicking - I welcome any feedback or suggestions for improvement. Reach out on [Twitter](https://twitter.com/dotjesper "dotjesper"), I read Direct Messages (DMs) and allow them from people I do not follow. For other means of contact, please visit [https://dotjesper.com/contact/](https://dotjesper.com/contact/ "Contact")
 
-Windows rhythm is under development and alive - I welcome any feedback or suggestions for improvement. Reach out on Twitter, I read Direct Messages (DMs) and allow them from people I do not follow. For other means of contact, please visit [https://dotjesper.com/contact/](https://dotjesper.com/contact/ "Contact")
+Do not hesitate to reach out if issues arise or new functionality and improvement comes to mind.
+
+Feel free to fork and build.
 
 This is a personal development, please respect the community sharing philosophy and be nice!
 
 ## Goal
 
-The goal is to provide a consistent experience to end user devices using Windows Autopilot but can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
+The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
+Windows rhyth can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
 
 ## Synopsis
 
@@ -51,6 +54,7 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 |- samples
 |--- baselineAppsC.json
 |--- baselineFeaturesC.json
+|--- baselineFileOpenBehaviorC.json
 |--- baselineSettingsC.json
 |--- baselineSettingsU.json
 |--- baselineServicesC.json
@@ -96,6 +100,7 @@ powershell.exe -NoLogo -ExecutionPolicy RemoteSigned -File ".\rhythm.ps1" -logFi
 This is not an official repository, and is not affiliated with Microsoft, the **Windows rhythm** repository is not affiliated with or endorsed by Microsoft. The names of actual companies and products mentioned herein may be the trademarks of their respective owners. All trademarks are the property of their respective companies.
 
 ## Legal and Licensing
+
 **Windows rhythm** is licensed under the [MIT license](./license 'MIT license').
 
 The information and data of this repository and its contents are subject to change at any time without notice to you. This repository and its contents are provided AS IS without warranty of any kind and should not be interpreted as an offer or commitment on the part of the author(s). The descriptions are intended as brief highlights to aid understanding, rather than as thorough coverage.
