@@ -22,7 +22,7 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
 .NOTES
-	version: 0.9.1.0
+	version: 0.9.2.0
 	author: @dotjesper
 	date: September 12, 2021
 #>
@@ -135,6 +135,29 @@ begin {
                     $fpropertyType = "Unknown"
                 }
                 Default {}
+            }
+            if ($($(Get-PSDrive -PSProvider "Registry" -Name "$froot" -ErrorAction "SilentlyContinue").Name)) {
+                fLogContent -fLogContent "registry PSDrive $($froot) found." -fLogContentComponent "fRegistryItem"
+            }
+            else {
+                switch ("$froot") {
+                    "HKCR" {
+                        fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
+                        New-PSDrive -Name "HKCR" -PSProvider "Registry" -Root "HKEY_CLASSES_ROOT" -Scope "Script" -Verbose:$false| Out-Null
+                    }
+                    "HKCU" {
+                        fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
+                        New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_CURRENT_USER" -Scope "Script" -Verbose:$false| Out-Null
+                    }
+                    "HKLM" {
+                        fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
+                        New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_LOCAL_MACHINE" -Scope "Script" -Verbose:$false | Out-Null
+                    }
+                    Default {
+                        fLogContent -fLogContent "registry PSDrive $($froot) is an unknown or unsupported value, exiting." -fLogContentComponent "fRegistryItem"
+                        exit 1
+                    }
+                }
             }
         }
         process {
