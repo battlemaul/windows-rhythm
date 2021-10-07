@@ -7,80 +7,10 @@
             "title": "Windows rhythm",
             "description": "",
             "url": "",
-            "version": "1.0.2.1",
-            "date": "2021-09-14",
+            "version": "1.0.3.2",
+            "date": "2021-10-07",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
-        }
-    ],
-    "windowsFeatures": [
-        {
-            "enabled": false,
-            "features": [
-                {
-                    "FeatureName": "MicrosoftWindowsPowerShellV2Root",
-                    "DisplayName": "Windows PowerShell 2.0.",
-                    "Description": "Adds or Removes Windows PowerShell 2.0.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "MicrosoftWindowsPowerShellV2",
-                    "DisplayName": "Windows PowerShell 2.0 Engine.",
-                    "Description": "Adds or Removes Windows PowerShell 2.0 Engine.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol",
-                    "DisplayName": "SMB 1.0/CIFS File Sharing Support",
-                    "Description": "Support for the SMB 1.0/CIFS file sharing protocol, and the Computer Browser protocol.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Client",
-                    "DisplayName": "SMB 1.0/CIFS Client",
-                    "Description": "Support for the SMB 1.0/CIFS client for accessing legacy servers.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Server",
-                    "DisplayName": "SMB 1.0/CIFS Server",
-                    "Description": "Support for the SMB 1.0/CIFS file server for sharing data with legacy clients and browsing the network neighborhood.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Deprecation",
-                    "DisplayName": "SMB 1.0/CIFS Automatic Removal",
-                    "Description": "Automatically removes support for the legacy SMB 1.0/CIFS protocol when such support isn't actively needed during normal system usage.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "WorkFolders-Client",
-                    "DisplayName": "Work Folders Client",
-                    "Description": "Allows file synchronization with a configured file server.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "Microsoft-Hyper-V-All",
-                    "DisplayName": "Hyper-V",
-                    "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
-                    "State": "Enabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "Containers-DisposableClientVM",
-                    "DisplayName": "Windows Sandbox",
-                    "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
-                    "State": "Enabled",
-                    "RestartNeeded": false
-                }
-            ]
         }
     ],
     "windowsApps": [
@@ -222,21 +152,86 @@
             ]
         }
     ],
-    "windowsServices": [
+    "WindowsCapability": [
         {
             "enabled": false,
-            "services": [
+            "features": [
                 {
-                    "Name": "XboxGipSvc",
-                    "DisplayName": "Xbox Accessory Management Service",
-                    "StartType": "Manual",
-                    "StopIfRunning": false
+                    "FeatureName": "Media.WindowsMediaPlayer~~~~0.0.12.0",
+                    "DisplayName": "Windows Media Player",
+                    "Description": "Play audio and video files on your local machine and on the Internet",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                }
+            ]
+        }
+    ],
+    "windowsFeatures": [
+        {
+            "enabled": false,
+            "features": [
+                {
+                    "FeatureName": "MicrosoftWindowsPowerShellV2Root",
+                    "DisplayName": "Windows PowerShell 2.0.",
+                    "Description": "Adds or Removes Windows PowerShell 2.0.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
                 },
                 {
-                    "Name": "XboxNetApiSvc",
-                    "DisplayName": "Xbox Live Networking Service",
-                    "StartType": "Manual",
-                    "StopIfRunning": false
+                    "FeatureName": "MicrosoftWindowsPowerShellV2",
+                    "DisplayName": "Windows PowerShell 2.0 Engine.",
+                    "Description": "Adds or Removes Windows PowerShell 2.0 Engine.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "SMB1Protocol",
+                    "DisplayName": "SMB 1.0/CIFS File Sharing Support",
+                    "Description": "Support for the SMB 1.0/CIFS file sharing protocol, and the Computer Browser protocol.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "SMB1Protocol-Client",
+                    "DisplayName": "SMB 1.0/CIFS Client",
+                    "Description": "Support for the SMB 1.0/CIFS client for accessing legacy servers.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "SMB1Protocol-Server",
+                    "DisplayName": "SMB 1.0/CIFS Server",
+                    "Description": "Support for the SMB 1.0/CIFS file server for sharing data with legacy clients and browsing the network neighborhood.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "SMB1Protocol-Deprecation",
+                    "DisplayName": "SMB 1.0/CIFS Automatic Removal",
+                    "Description": "Automatically removes support for the legacy SMB 1.0/CIFS protocol when such support isn't actively needed during normal system usage.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "WorkFolders-Client",
+                    "DisplayName": "Work Folders Client",
+                    "Description": "Allows file synchronization with a configured file server.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "Microsoft-Hyper-V-All",
+                    "DisplayName": "Hyper-V",
+                    "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
+                    "State": "Enabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "Containers-DisposableClientVM",
+                    "DisplayName": "Windows Sandbox",
+                    "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
+                    "State": "Enabled",
+                    "RestartNeeded": false
                 }
             ]
         }
@@ -288,6 +283,25 @@
                     "Name": "AllowNewsAndInterests",
                     "Type": "DWORD",
                     "Value": "0"
+                }
+            ]
+        }
+    ],
+    "windowsServices": [
+        {
+            "enabled": false,
+            "services": [
+                {
+                    "Name": "XboxGipSvc",
+                    "DisplayName": "Xbox Accessory Management Service",
+                    "StartType": "Manual",
+                    "StopIfRunning": false
+                },
+                {
+                    "Name": "XboxNetApiSvc",
+                    "DisplayName": "Xbox Live Networking Service",
+                    "StartType": "Manual",
+                    "StopIfRunning": false
                 }
             ]
         }
