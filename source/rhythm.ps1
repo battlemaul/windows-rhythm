@@ -22,9 +22,9 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
 .NOTES
-	version: 0.9.2.0
+	version: 0.9.2.5
 	author: @dotjesper
-	date: September 12, 2021
+	date: October 5, 2021
 #>
 #requires -version 5.1
 [CmdletBinding()]
@@ -162,7 +162,7 @@ begin {
         }
         process {
             switch ($task) {
-                "add" { 
+                "add" {
                     try {
                         #Test Registry path exists and create if not found.
                         if (!(Test-Path -Path "$($froot):\$($fpath)")) {
@@ -186,7 +186,7 @@ begin {
                         fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem."
                         exit 1
                     }
-                    finally {}  
+                    finally {}
                 }
                 "remove" {
                     try {
@@ -277,6 +277,9 @@ Process {
         }
         finally {}
     }
+    else {
+        fLogContent -fLogContent "Windows Features disabled." -fLogContentComponent "windowsFeatures."
+    }
     #endregion
     #
     #region :: windowsApps
@@ -313,6 +316,9 @@ Process {
         }
         finally {}
     }
+    else {
+        fLogContent -fLogContent "Windows Apps disabled." -fLogContentComponent "windowsApps."
+    }
     #endregion
     #
     #region :: windowsServices
@@ -348,6 +354,9 @@ Process {
             exit 1
         }
         finally {}
+    }
+    else {
+        fLogContent -fLogContent "Windows Services disabled." -fLogContentComponent "windowsServices"
     }
     #endregion
     #
@@ -387,6 +396,9 @@ Process {
             exit 1
         }
         finally {}
+    }
+    else {
+        fLogContent -fLogContent "Windows Registry items disabled." -fLogContentComponent "windowsRegistry"
     }
     #endregion
     #
@@ -428,6 +440,9 @@ Process {
             exit 1
         }
         finally {}
+    }
+    else {
+        fLogContent -fLogContent "metadata items disabled." -fLogContentComponent "metadata"
     }
     #endregion
 }
