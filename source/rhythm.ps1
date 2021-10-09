@@ -22,9 +22,9 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
 .NOTES
-	version: 0.9.2.5
+	version: 0.9.3.2
 	author: @dotjesper
-	date: October 5, 2021
+	date: October 8, 2021
 #>
 #requires -version 5.1
 [CmdletBinding()]
@@ -170,7 +170,7 @@ begin {
                             New-Item -Path "$($froot):\$($fpath)" | Out-Null
                         }
                         else {
-                            fLogContent -fLogContent "registry path [$($froot):\$($fpath)] exists." -fLogContentComponent "fRegistryItem."
+                            fLogContent -fLogContent "registry path [$($froot):\$($fpath)] exists." -fLogContentComponent "fRegistryItem"
                         }
                         $fcurrentValue = $(Get-ItemProperty -path "$($froot):\$($fpath)" -name $fname -ErrorAction SilentlyContinue)."$fname"
                         if ($fcurrentValue -eq $fvalue) {
@@ -183,7 +183,7 @@ begin {
                     }
                     catch {
                         $errMsg = $_.Exception.Message
-                        fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem."
+                        fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem"
                         exit 1
                     }
                     finally {}
@@ -195,14 +195,14 @@ begin {
                             fLogContent -fLogContent "registry value [$($froot):\$($fpath)] : $($fname) not found." -fLogContentComponent "fRegistryItem"
                         }
                         else {
-                            fLogContent -fLogContent "registry value [$($froot):\$($fpath)] : $($fname) found." -fLogContentComponent "fRegistryItem."
-                            fLogContent -fLogContent "deleting registry value [$($froot):\$($fpath)] : $($fname)." -fLogContentComponent "fRegistryItem."
+                            fLogContent -fLogContent "registry value [$($froot):\$($fpath)] : $($fname) found." -fLogContentComponent "fRegistryItem"
+                            fLogContent -fLogContent "deleting registry value [$($froot):\$($fpath)] : $($fname)." -fLogContentComponent "fRegistryItem"
                             Remove-ItemProperty -Path "$($froot):\$($fpath)" -Name $($fname) -Force | Out-Null
                         }
                     }
                     catch {
                         $errMsg = $_.Exception.Message
-                        fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem."
+                        fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem"
                         exit 1
                     }
                     finally {}
@@ -236,72 +236,35 @@ begin {
 Process {
     #region :: check conditions
     if ($runScriptIn64bitPowerShell -eq $true -and $([System.Environment]::Is64BitProcess) -eq $false) {
-        fLogContent -fLogContent "Script must be run using 64-bit PowerShell." -fLogContentComponent "windowsFeatures."
+        fLogContent -fLogContent "Script must be run using 64-bit PowerShell." -fLogContentComponent "windowsFeatures"
         exit 1
-    }
-    #endregion
-    #
-    #region :: windowsFeatures
-    if ($($config.windowsFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Features" -fLogContentComponent "windowsFeatures."
-        try {
-            [array]$windowsFeatures = $($config.windowsFeatures.features)
-            foreach ($windowsFeature in $windowsFeatures) {
-                fLogContent -fLogContent "Processing $($windowsFeature.FeatureName)." -fLogContentComponent "windowsFeatures."
-                [string]$featureState = $(get-WindowsOptionalFeature -Online -FeatureName $($windowsFeature.FeatureName) -Verbose:$false).state
-                if ($($windowsFeature.State) -eq $featureState) {
-                    fLogContent -fLogContent "$($windowsFeature.FeatureName) configured [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures."
-                }
-                else {
-                    fLogContent -fLogContent "configuring $($windowsFeature.FeatureName) [$($windowsFeature.State)]" -fLogContentComponent "windowsFeatures."
-                    switch ($($windowsFeature.State).ToUpper()) {
-                        "ENABLED" {
-                            fLogContent -fLogContent "enabling $($windowsFeature.FeatureName)." -fLogContentComponent "windowsFeatures."
-                            Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -Verbose:$false | Out-Null
-                        }
-                        "DISABLED" {
-                            fLogContent -fLogContent "disabling $($windowsFeature.FeatureName)." -fLogContentComponent "windowsFeatures."
-                            Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -Verbose:$false | Out-Null
-                        }
-                        Default {
-                            fLogContent -fLogContent "unsupported state $($windowsFeature.FeatureName) [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures."
-                        }
-                    }
-                }
-            }
-        }
-        catch {
-            $errMsg = $_.Exception.Message
-            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures."
-            exit 1
-        }
-        finally {}
-    }
-    else {
-        fLogContent -fLogContent "Windows Features disabled." -fLogContentComponent "windowsFeatures."
     }
     #endregion
     #
     #region :: windowsApps
     if ($($config.windowsApps.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Apps." -fLogContentComponent "windowsApps."
+        fLogContent -fLogContent "Processing Windows Apps." -fLogContentComponent "windowsApps"
         try {
             [array]$windowsApps = $($config.windowsApps.apps)
             foreach ($windowsApp in $windowsApps) {
                 fLogContent -fLogContent "Processing $($windowsApp.Name)." -fLogContentComponent "windowsApps"
+                [array]$AppxPackage = Get-AppxPackage -AllUsers -Name $($windowsApp.DisplayName) -Verbose:$false
+                if ($AppxPackage) {
+                    fLogContent -fLogContent "found Appx Package $($windowsApp.DisplayName), $($AppxPackage.PackageFullName), $($AppxPackage.Version)." -fLogContentComponent "windowsApps"
+                    if ($($windowsApp.Remove) -eq $true) {
+                        fLogContent -fLogContent "removing $($windowsApp.DisplayName) app package for all users." -fLogContentComponent "windowsApps"
+                        Remove-AppxPackage -AllUsers -Package "$($AppxPackage.PackageFullName)" -Verbose:$false | Out-Null
+                    }
+                    else {
+                        fLogContent -fLogContent "$($windowsApp.DisplayName) not found!" -fLogContentComponent "windowsApps"
+                    }
+                }
                 [array]$AppxProvisionedPackage = Get-AppxProvisionedPackage -Online -Verbose:$false | Where-Object { $_.DisplayName -eq $($windowsApp.DisplayName) } | Select-Object "DisplayName", "Version", "PublisherId", "PackageName"
                 if ($AppxProvisionedPackage) {
-                    fLogContent -fLogContent "$($AppxProvisionedPackage.DisplayName), $($AppxProvisionedPackage.PackageName), $($AppxProvisionedPackage.Version)." -fLogContentComponent "windowsApps"
-                    #Get-AppxPackage -AllUsers | where-object {$_.name -eq $($AppxProvisionedPackage.DisplayName)}
-                    #Get-AppxPackage -AllUsers -Name "Microsoft.SecHealthUI"
-
-                    if ($($windowsApp.Remove) -eq $true) {
-                        fLogContent -fLogContent "removing $($windowsApp.DisplayName) for all users." -fLogContentComponent "windowsApps"
-                        #Remove-AppxPackage -Package "" -Verbose:$false | Out-Null
-                    }
+                    fLogContent -fLogContent "found Appx Provisioned Package $($AppxProvisionedPackage.DisplayName), $($AppxProvisionedPackage.PackageName), $($AppxProvisionedPackage.Version)." -fLogContentComponent "windowsApps"
                     if ($($windowsApp.RemoveProvisionedPackage) -eq $true) {
-                        fLogContent -fLogContent "removing $($windowsApp.DisplayName) provisioned app package." -fLogContentComponent "windowsApps"
-                        #Remove-AppxProvisionedPackage -PackageName "" -Verbose:$false | Out-Null
+                        fLogContent -fLogContent "removing $($windowsApp.Name) provisioned app package." -fLogContentComponent "windowsApps"
+                        Remove-AppxProvisionedPackage -Online -PackageName "$($AppxProvisionedPackage.PackageName)" -Verbose:$false | Out-Null
                     }
                 }
                 else {
@@ -317,48 +280,51 @@ Process {
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Apps disabled." -fLogContentComponent "windowsApps."
+        fLogContent -fLogContent "Windows Apps disabled." -fLogContentComponent "windowsApps"
     }
     #endregion
     #
-    #region :: windowsServices
-    if ($($config.windowsServices.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Services." -fLogContentComponent "windowsServices"
+    #region :: windowsFeatures
+    if ($($config.windowsFeatures.enabled) -eq $true) {
+        fLogContent -fLogContent "Processing Windows Features." -fLogContentComponent "windowsFeatures"
         try {
-            [array]$windowsServices = $($config.windowsServices.services)
-            foreach ($windowsService in $windowsServices) {
-                fLogContent -fLogContent "Processing $($windowsService.DisplayName) [$($windowsService.Name)]." -fLogContentComponent "windowsServices"
-                [array]$windowsServiceStatus = Get-Service -Name "$($windowsService.Name)" -ErrorAction "SilentlyContinue"
-                if ($windowsServiceStatus) {
-                    fLogContent -fLogContent "$($windowsServiceStatus.DisplayName) found! | Status: $($windowsServiceStatus.Status) | StartType: $($windowsServiceStatus.StartType)." -fLogContentComponent "windowsServices"
-                    if ($($windowsService.StartType) -eq  $($windowsServiceStatus.StartType)) {
-                        fLogContent -fLogContent "$($windowsService.Name) already configured." -fLogContentComponent "windowsServices"
-                    }
-                    else {
-                        fLogContent -fLogContent "reconfigure $($windowsService.Name) [($($windowsServiceStatus.StartType) ->  $($windowsService.StartType))]." -fLogContentComponent "windowsServices"
-                        Set-Service -Name "$($windowsService.Name)" -StartupType "$($windowsServiceStatus.StartType)"
-                    }
-                    if ($($windowsService.StopIfRunning) -eq $true -and $($windowsServiceStatus.Status) -eq "Running") {
-                        fLogContent -fLogContent "Stopping $($windowsService.DisplayName) [$($windowsService.Name)]." -fLogContentComponent "windowsServices"
-                        Stop-Service -Name "$($windowsService.Name)" -Force
-                    }
+            [array]$windowsFeatures = $($config.windowsFeatures.features)
+            foreach ($windowsFeature in $windowsFeatures) {
+                fLogContent -fLogContent "Processing $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+                [string]$featureState = $(Get-WindowsOptionalFeature -Online -FeatureName $($windowsFeature.FeatureName) -Verbose:$false).state
+                if ($($windowsFeature.State) -eq $featureState) {
+                    fLogContent -fLogContent "$($windowsFeature.DisplayName) configured [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
                 }
                 else {
-                    fLogContent -fLogContent "$($windowsService.DisplayName) not found!" -fLogContentComponent "windowsServices"
+                    fLogContent -fLogContent "configuring $($windowsFeature.DisplayName) [$($windowsFeature.State)]" -fLogContentComponent "windowsFeatures"
+                    switch ($($windowsFeature.State).ToUpper()) {
+                        "ENABLED" {
+                            fLogContent -fLogContent "enabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+                            Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -NoRestart -Verbose:$false | Out-Null
+                        }
+                        "DISABLED" {
+                            fLogContent -fLogContent "disabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+                            Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -NoRestart -Verbose:$false | Out-Null
+                        }
+                        Default {
+                            fLogContent -fLogContent "unsupported state $($windowsFeature.DisplayName) [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
+                        }
+                    }
                 }
             }
         }
         catch {
             $errMsg = $_.Exception.Message
-            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsServices"
+            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
             exit 1
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Services disabled." -fLogContentComponent "windowsServices"
+        fLogContent -fLogContent "Windows Features disabled." -fLogContentComponent "windowsFeatures"
     }
     #endregion
+
     #
     #region :: windowsRegistry
     if ($($config.windowsRegistry.enabled) -eq $true) {
@@ -401,6 +367,46 @@ Process {
         fLogContent -fLogContent "Windows Registry items disabled." -fLogContentComponent "windowsRegistry"
     }
     #endregion
+    #
+    #region :: windowsServices
+    if ($($config.windowsServices.enabled) -eq $true) {
+        fLogContent -fLogContent "Processing Windows Services." -fLogContentComponent "windowsServices"
+        try {
+            [array]$windowsServices = $($config.windowsServices.services)
+            foreach ($windowsService in $windowsServices) {
+                fLogContent -fLogContent "Processing $($windowsService.DisplayName) [$($windowsService.Name)]." -fLogContentComponent "windowsServices"
+                [array]$windowsServiceStatus = Get-Service -Name "$($windowsService.Name)" -ErrorAction "SilentlyContinue"
+                if ($windowsServiceStatus) {
+                    fLogContent -fLogContent "$($windowsServiceStatus.DisplayName) found! | Status: $($windowsServiceStatus.Status) | StartType: $($windowsServiceStatus.StartType)." -fLogContentComponent "windowsServices"
+                    if ($($windowsService.StartType) -eq  $($windowsServiceStatus.StartType)) {
+                        fLogContent -fLogContent "$($windowsService.Name) already configured." -fLogContentComponent "windowsServices"
+                    }
+                    else {
+                        fLogContent -fLogContent "reconfigure $($windowsService.Name) [($($windowsServiceStatus.StartType) ->  $($windowsService.StartType))]." -fLogContentComponent "windowsServices"
+                        Set-Service -Name "$($windowsService.Name)" -StartupType "$($windowsServiceStatus.StartType)"
+                    }
+                    if ($($windowsService.StopIfRunning) -eq $true -and $($windowsServiceStatus.Status) -eq "Running") {
+                        fLogContent -fLogContent "Stopping $($windowsService.DisplayName) [$($windowsService.Name)]." -fLogContentComponent "windowsServices"
+                        Stop-Service -Name "$($windowsService.Name)" -Force
+                    }
+                }
+                else {
+                    fLogContent -fLogContent "$($windowsService.DisplayName) not found!" -fLogContentComponent "windowsServices"
+                }
+            }
+        }
+        catch {
+            $errMsg = $_.Exception.Message
+            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsServices"
+            exit 1
+        }
+        finally {}
+    }
+    else {
+        fLogContent -fLogContent "Windows Services disabled." -fLogContentComponent "windowsServices"
+    }
+    #endregion
+    #
     #
     #region :: metadata
     if ($($config.metadata.enabled) -eq $true) {

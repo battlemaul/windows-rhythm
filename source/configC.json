@@ -1,7 +1,7 @@
 {
     "metadata": [
         {
-            "enabled": false,
+            "enabled": true,
             "installBehavior": "SYSTEM",
             "guid": "{FBBBD307-693B-4A32-B220-321BEC92A136}",
             "title": "Windows rhythm",
@@ -15,7 +15,7 @@
     ],
     "windowsApps": [
         {
-            "enabled": false,
+            "enabled": true,
             "apps": [
                 {
                     "Name": "Bing News",
@@ -104,8 +104,8 @@
                 {
                     "Name": "Mail and Calendar",
                     "DisplayName": "Microsoft.windowscommunicationsapps",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Xbox Live in-game experience",
@@ -152,23 +152,9 @@
             ]
         }
     ],
-    "WindowsCapability": [
-        {
-            "enabled": false,
-            "features": [
-                {
-                    "FeatureName": "Media.WindowsMediaPlayer~~~~0.0.12.0",
-                    "DisplayName": "Windows Media Player",
-                    "Description": "Play audio and video files on your local machine and on the Internet",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                }
-            ]
-        }
-    ],
     "windowsFeatures": [
         {
-            "enabled": false,
+            "enabled": true,
             "features": [
                 {
                     "FeatureName": "MicrosoftWindowsPowerShellV2Root",
@@ -223,14 +209,14 @@
                     "FeatureName": "Microsoft-Hyper-V-All",
                     "DisplayName": "Hyper-V",
                     "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
-                    "State": "Enabled",
+                    "State": "Disabled",
                     "RestartNeeded": false
                 },
                 {
                     "FeatureName": "Containers-DisposableClientVM",
                     "DisplayName": "Windows Sandbox",
                     "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
-                    "State": "Enabled",
+                    "State": "Disabled",
                     "RestartNeeded": false
                 }
             ]
@@ -238,7 +224,7 @@
     ],
     "windowsRegistry": [
         {
-            "enabled": false,
+            "enabled": true,
             "items": [
                 {
                     "description": "Block Azure AD Workplace join in 3rd-part tenants",
@@ -289,7 +275,7 @@
     ],
     "windowsServices": [
         {
-            "enabled": false,
+            "enabled": true,
             "services": [
                 {
                     "Name": "XboxGipSvc",

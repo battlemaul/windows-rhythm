@@ -1,7 +1,7 @@
 {
     "metadata": [
         {
-            "enabled": false,
+            "enabled": true,
             "installBehavior": "USER",
             "guid": "{9C40E387-53CF-423A-B3DF-E5874391BE7C}",
             "title": "Windows rhythm",
