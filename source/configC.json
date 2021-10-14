@@ -7,8 +7,8 @@
             "title": "Windows rhythm",
             "description": "",
             "url": "",
-            "version": "1.0.3.2",
-            "date": "2021-10-07",
+            "version": "1.0.4.1",
+            "date": "2021-10-09",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
         }
@@ -217,6 +217,20 @@
                     "DisplayName": "Windows Sandbox",
                     "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
                     "State": "Disabled",
+                    "RestartNeeded": false
+                }
+            ]
+        }
+    ],
+    "windowsOptionalFeatures": [
+        {
+            "enabled": true,
+            "features": [
+                {
+                    "Name": "Media.WindowsMediaPlayer~~~~0.0.12.0",
+                    "DisplayName": "Windows Media Player",
+                    "Description": "Play audio and video files on your local machine and on the Internet",
+                    "State": "NotPresent",
                     "RestartNeeded": false
                 }
             ]

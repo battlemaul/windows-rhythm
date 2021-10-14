@@ -44,6 +44,14 @@ Target: Windows registry
 
 Version: 0.9.0.2 *PREVIEW*
 
+**baselineOptional_RSAT_FeaturesC.json**:  Windows Remote Server Administration Tools (RSAT) optional feature configuration settings
+
+Install behavior: SYSTEM
+
+Target: Windows Optional Features (Windows Capability )
+
+Version: 1.0.0.0
+
 **baselineServicesC.json**: Baseline Windows Services configuration settings.
 
 Install behavior: SYSTEM

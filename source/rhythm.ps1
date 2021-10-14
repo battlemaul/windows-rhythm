@@ -22,9 +22,9 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
 .NOTES
-	version: 0.9.3.2
+	version: 0.9.4.1
 	author: @dotjesper
-	date: October 8, 2021
+	date: October 9, 2021
 #>
 #requires -version 5.1
 [CmdletBinding()]
@@ -324,7 +324,47 @@ Process {
         fLogContent -fLogContent "Windows Features disabled." -fLogContentComponent "windowsFeatures"
     }
     #endregion
-
+    #
+    #region :: windowsOptionalFeatures
+    if ($($config.windowsOptionalFeatures.enabled) -eq $true) {
+        fLogContent -fLogContent "Processing Windows Optional Features." -fLogContentComponent "windowsOptionalFeatures"
+        try {
+            [array]$windowsOptionalFeatures = $($config.windowsOptionalFeatures.features)
+            foreach ($windowsOptionalFeature in $windowsOptionalFeatures) {
+                fLogContent -fLogContent "Processing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+                [string]$featureState = $(Get-WindowsCapability -Online -Name $($windowsOptionalFeature.Name) -Verbose:$false).state
+                if ($($windowsOptionalFeature.State) -eq $featureState) {
+                    fLogContent -fLogContent "$($windowsOptionalFeature.DisplayName) configured [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
+                }
+                else {
+                    fLogContent -fLogContent "configuring $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]" -fLogContentComponent "windowsOptionalFeatures"
+                    switch ($($windowsOptionalFeature.State).ToUpper()) {
+                        "INSTALLED" {
+                            fLogContent -fLogContent "installing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+                            Add-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false | Out-Null
+                        }
+                        "NOTPRESENT" {
+                            fLogContent -fLogContent "removing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+                            Remove-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false | Out-Null
+                        }                    
+                        Default {
+                            fLogContent -fLogContent "unsupported state $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+            $errMsg = $_.Exception.Message
+            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
+            exit 1
+        }
+        finally {}
+    }
+    else {
+        fLogContent -fLogContent "Windows Optional Features disabled." -fLogContentComponent "windowsOptionalFeatures"
+    }
+    #endregion
     #
     #region :: windowsRegistry
     if ($($config.windowsRegistry.enabled) -eq $true) {
