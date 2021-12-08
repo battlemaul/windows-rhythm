@@ -51,19 +51,19 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 ## Content
 
 ```
-|- samples
-|--- baselineAppsC.json
-|--- baselineFeaturesC.json
-|--- baselineFileOpenBehaviorC.json
-|--- baselineSettingsC.json
-|--- baselineSettingsU.json
-|--- baselineServicesC.json
-|--- baselineOfficeSettingsC.json
-|--- baselineOfficeSettingsU.json
-|- source
-|--- configC.json
-|--- configU.json
-|--- rhythm.ps1
+├── samples
+│  ├─ baselineAppsC.json
+│  ├─ baselineFeaturesC.json
+│  ├─ baselineFileOpenBehaviorC.json
+│  ├─ baselineSettingsC.json
+│  ├─ baselineSettingsU.json
+│  ├─ baselineServicesC.json
+│  ├─ baselineOfficeSettingsC.json
+│  ├─ baselineOfficeSettingsU.json
+├─ source
+│  ├─ configC.json
+│  ├─ configU.json
+│  ├─ rhythm.ps1
 ```
 
 ## Usage
