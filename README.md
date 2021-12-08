@@ -38,6 +38,7 @@ The mindset of the solution will aim to allow to limit and/or combine the functi
 ## Current features
 
 - Enabling and disabling Windows features.
+- Enabling and disabling Windows Optional features
 - Remove Windows In-box Apps and Store Apps.
 - Configure/re-configure Windows Services.
 - Modifying Windows registry entries (add and remove).
