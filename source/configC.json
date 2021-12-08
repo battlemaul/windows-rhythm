@@ -274,6 +274,28 @@
                     "Value": "1"
                 },
                 {
+                    "description": "Enable Additional LSA Protection",
+                    "minOSbuild": "",
+                    "maxOSbuild": "",
+                    "item": "add",
+                    "root": "HKLM",
+                    "Path": "System\\CurrentControlSet\\Control\\Lsa",
+                    "Name": "DisableDomainCreds",
+                    "Type": "DWORD",
+                    "Value": "1"
+                },
+                {
+                    "description": "Enable Automatically Adjust Active Hours setting",
+                    "minOSbuild": "",
+                    "maxOSbuild": "19044",
+                    "item": "add",
+                    "root": "HKLM",
+                    "Path": "Software\\Microsoft\\WindowsUpdate\\UX\\Settings",
+                    "Name": "SmartActiveHoursState",
+                    "Type": "DWORD",
+                    "Value": "1"
+                },
+                {
                     "description": "Disable Widgets",
                     "minOSbuild": "30000",
                     "maxOSbuild": "",

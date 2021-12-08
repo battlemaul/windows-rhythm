@@ -20,7 +20,7 @@
                 {
                     "description": "Hide 'People' from Taskbar",
                     "minOSbuild": "",
-                    "maxOSbuild": "19041",
+                    "maxOSbuild": "19044",
                     "item": "add",
                     "root": "HKCU",
                     "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\People",
@@ -31,7 +31,7 @@
                 {
                     "description": "Hide 'Cortana' icon from Taskbar",
                     "minOSbuild": "",
-                    "maxOSbuild": "19041",
+                    "maxOSbuild": "19044",
                     "item": "add",
                     "root": "HKCU",
                     "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
@@ -42,7 +42,7 @@
                 {
                     "description": "Hide 'News and Interests' icon from Taskbar",
                     "minOSbuild": "",
-                    "maxOSbuild": "19041",
+                    "maxOSbuild": "19044",
                     "item": "add",
                     "root": "HKCU",
                     "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Feeds",
