@@ -62,8 +62,8 @@
                 {
                     "Name": "OneNote for Windows",
                     "DisplayName": "Microsoft.Office.OneNote",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Excel Mobile",
