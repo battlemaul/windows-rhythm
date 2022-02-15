@@ -7,8 +7,8 @@
             "title": "Windows rhythm",
             "description": "Baseline Windows configuration settings",
             "url": "",
-            "version": "1.2.0.1",
-            "date": "2021-09-14",
+            "version": "1.2.0.5",
+            "date": "2022-02-15",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
         }
@@ -52,18 +52,18 @@
                 },
                 {
                     "description": "Hide 'Search' icon from Taskbar",
-                    "minOSbuild": "30000",
+                    "minOSbuild": "22000",
                     "maxOSbuild": "",
                     "item": "add",
                     "root": "HKCU",
                     "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Search",
-                    "Name": "SearchboxTaskbarMode ",
+                    "Name": "SearchboxTaskbarMode",
                     "Type": "DWORD",
                     "Value": "1"
                 },
                 {
                     "description": "Hide 'Task View Button' icon from Taskbars",
-                    "minOSbuild": "30000",
+                    "minOSbuild": "22000",
                     "maxOSbuild": "",
                     "item": "add",
                     "root": "HKCU",
