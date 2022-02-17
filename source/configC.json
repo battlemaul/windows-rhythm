@@ -7,10 +7,15 @@
             "title": "Windows rhythm",
             "description": "",
             "url": "",
-            "version": "1.0.4.1",
-            "date": "2021-10-09",
+            "version": "1.2.1.0",
+            "date": "2022-02-17",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
+        }
+    ],
+    "runConditions": [
+        {
+            "runScriptIn64bitPowerShell": true
         }
     ],
     "windowsApps": [

@@ -3,18 +3,21 @@
     Windows rhythm device baseline configurator.
 .DESCRIPTION
     The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
-    Windows rhyth can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
+    Windows rhythm can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
     Current features:
     - Enabling and disabling Windows features.
+    - Enabling and disabling Windows optional features.
     - Remove Windows In-box Apps and Store Apps.
     - Configure/re-configure Windows Services.
-    - Modifying Windows registry entries (add and remove).
+    - Modifying Windows registry entries (add, change and remove).
 .PARAMETER configFile
     Start script with the defined configuration file to be used for the task.
     If no configuration file is defined, script will look for .\config.json. If the configuration is not found or invalid, the script will exit.
 .PARAMETER logFile
     Start script logging to the desired logfile.
     If no log file is defined, the script will default to Windows rhythm log file within %ProgramData%\Microsoft\IntuneManagementExtension\Logs\ folder.
+.PARAMETER exitOnError
+    If an error occurs, control if script should exit-on-error. Default value is $false.
 .EXAMPLE
     .\rhythm.ps1
 .EXAMPLE
@@ -22,9 +25,11 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
 .NOTES
-	version: 0.9.4.1
+	version: 0.9.5.0
 	author: @dotjesper
-	date: October 9, 2021
+	date: February 17, 2022
+.LINK
+    https://github.com/dotjesper/windows-rhythm
 #>
 #requires -version 5.1
 [CmdletBinding()]
@@ -36,13 +41,14 @@ param (
     [string]$configFile = ".\config.json",
     [Parameter(Mandatory = $false)]
     [Alias("log")]
-    [string]$logFile = ""
+    [string]$logFile = "",
+    [Parameter(Mandatory = $false)]
+    [Alias("eoe")]
+    [bool]$exitOnError = $false
 )
 begin {
     #variables :: environment
     #
-    #variables :: conditions
-    [bool]$runScriptIn64bitPowerShell = $true
     #variables :: configuation file
     if (Test-Path -Path $configFile -PathType Leaf) {
         try {
@@ -50,6 +56,7 @@ begin {
             $config = ConvertFrom-Json $config
         }
         catch {
+            Write-Output -InputObject "Error reading [$configFile], script exiting."
             throw $_.Exception.Message
             exit 1
         }
@@ -60,20 +67,27 @@ begin {
     }
     #
     #variables :: logfile
-    [string]$fLogContentpkg = "$($config.metadata.title -replace '[^a-zA-Z0-9]','-')"
-    [string]$fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
+    [string]$global:fLogContentpkg = "$($config.metadata.title -replace '[^a-zA-Z0-9]','-')"
+    [string]$global:fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
     if ($logfile.Length -gt 0) {
-        [string]$fLogContentFile = $logfile
+        [string]$global:fLogContentFile = $logfile
     }
+    #endregion
     #
     #region :: functions
     function fLogContent () {
+        <#
+        .SYNOPSIS
+        .DESCRIPTION
+        #>
         [CmdletBinding()]
         param (
             [Parameter(Mandatory = $true)]
             [string]$fLogContent,
             [Parameter(Mandatory = $false)]
-            [string]$fLogContentComponent
+            [string]$fLogContentComponent,
+            [Parameter(Mandatory = $false)]
+            [string]$fLogContentfn = $fLogContentFile
         )
         begin {
             $fdate = $(Get-Date -Format "M-dd-yyyy")
@@ -81,10 +95,10 @@ begin {
         }
         process {
             try {
-                if (!(Test-Path -Path "$(Split-Path -Path $fLogContentFile)")) {
-                    New-Item -itemType "Directory" -Path "$(Split-Path -Path $fLogContentFile)" | Out-Null
+                if (!(Test-Path -Path "$(Split-Path -Path $fLogContentfn)")) {
+                    New-Item -itemType "Directory" -Path "$(Split-Path -Path $fLogContentfn)" | Out-Null
                 }
-                Add-Content -Path $fLogContentFile -Value "<![LOG[[$fLogContentpkg] $($fLogContent)]LOG]!><time=""$($ftime)"" date=""$($fdate)"" component=""$fLogContentComponent"" context="""" type="""" thread="""" file="""">" | Out-Null
+                Add-Content -Path $fLogContentfn -Value "<![LOG[[$fLogContentpkg] $($fLogContent)]LOG]!><time=""$($ftime)"" date=""$($fdate)"" component=""$fLogContentComponent"" context="""" type="""" thread="""" file="""">" | Out-Null
             }
             catch {
                 throw $_.Exception.Message
@@ -96,6 +110,10 @@ begin {
         end {}
     }
     function fRegistryItem () {
+        <#
+        .SYNOPSIS
+        .DESCRIPTION
+        #>
         [CmdletBinding()]
         param (
             [Parameter(Mandatory = $true)]
@@ -137,7 +155,7 @@ begin {
                 Default {}
             }
             if ($($(Get-PSDrive -PSProvider "Registry" -Name "$froot" -ErrorAction "SilentlyContinue").Name)) {
-                fLogContent -fLogContent "registry PSDrive $($froot) found." -fLogContentComponent "fRegistryItem"
+                fLogContent -fLogContent "registry PSDrive $($froot) exists." -fLogContentComponent "fRegistryItem"
             }
             else {
                 switch ("$froot") {
@@ -154,7 +172,7 @@ begin {
                         New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_LOCAL_MACHINE" -Scope "Script" -Verbose:$false | Out-Null
                     }
                     Default {
-                        fLogContent -fLogContent "registry PSDrive $($froot) is an unknown or unsupported value, exiting." -fLogContentComponent "fRegistryItem"
+                        fLogContent -fLogContent "registry PSDrive $($froot) has an unknown or unsupported value, exiting." -fLogContentComponent "fRegistryItem"
                         exit 1
                     }
                 }
@@ -167,7 +185,15 @@ begin {
                         #Test Registry path exists and create if not found.
                         if (!(Test-Path -Path "$($froot):\$($fpath)")) {
                             fLogContent -fLogContent "registry path [$($froot):\$($fpath)] not found." -fLogContentComponent "fRegistryItem"
-                            New-Item -Path "$($froot):\$($fpath)" | Out-Null
+                            try {
+                                New-Item -Path "$($froot):\$($fpath)" -Force | Out-Null
+                                fLogContent -fLogContent "registry path [$($froot):\$($fpath)] created." -fLogContentComponent "fRegistryItem"
+                            }
+                            catch {
+                                $errMsg = $_.Exception.Message
+                                fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "fRegistryItem"
+                            }
+                            finally {}
                         }
                         else {
                             fLogContent -fLogContent "registry path [$($froot):\$($fpath)] exists." -fLogContentComponent "fRegistryItem"
@@ -214,36 +240,41 @@ begin {
     }
     #endregion
     #
-    #logfile environment entries
+    #region :: logfile environment entries
     [array]$logfileItems = @(
-        [pscustomobject]@{fLogContent = "## $($config.metadata.title) by $($config.metadata.developer)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Config file: $($configFile)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Config file version: $($config.metadata.version) | $($config.metadata.date)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Log file: $($fLogContentFile)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Command line: $($MyInvocation.Line)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Run script in 64 bit PowerShell: $($runScriptIn64bitPowerShell)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Running 64 bit PowerShell: $([System.Environment]::Is64BitProcess)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Running elevated: $(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Detected user: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Detected keyboard layout Id: $((Get-Culture).KeyboardLayoutId)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Detected language mode: $($ExecutionContext.SessionState.LanguageMode)"; fLogContentComponent = "" }
-        [pscustomobject]@{fLogContent = "Detected culture name: $((Get-Culture).Name)"; fLogContentComponent = "" }
+        [pscustomobject]@{fLogContent = "## $($config.metadata.title) by $($config.metadata.developer)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Config file: $($configFile)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Config file version: $($config.metadata.version) | $($config.metadata.date)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Config file description: $($config.metadata.description)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Log file: $($fLogContentFile)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Command line: $($MyInvocation.Line)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Run script in 64 bit PowerShell: $($config.runConditions.runScriptIn64bitPowerShell)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Running 64 bit PowerShell: $([System.Environment]::Is64BitProcess)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Running elevated: $(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Detected user: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Detected keyboard layout Id: $((Get-Culture).KeyboardLayoutId)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Detected language mode: $($ExecutionContext.SessionState.LanguageMode)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Detected culture name: $((Get-Culture).Name)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "Detected OS build: $($([environment]::OSVersion.Version).Build)"; fLogContentComponent = "environment" }
     )
     foreach ($logfileItem in $logfileItems) {
         fLogContent -fLogContent "$($logfileItem.fLogContent)" -fLogContentComponent "$($logfileItem.fLogContentComponent)"
     }
-}
-Process {
+    #endregion
+    #
     #region :: check conditions
-    if ($runScriptIn64bitPowerShell -eq $true -and $([System.Environment]::Is64BitProcess) -eq $false) {
-        fLogContent -fLogContent "Script must be run using 64-bit PowerShell." -fLogContentComponent "windowsFeatures"
+    if ($($config.runConditions.runScriptIn64bitPowerShell) -eq $true -and $([System.Environment]::Is64BitProcess) -eq $false) {
+        fLogContent -fLogContent "Script must be run using 64-bit PowerShell." -fLogContentComponent "environment"
         exit 1
     }
     #endregion
-    #
+}
+Process {
+
     #region :: windowsApps
+    fLogContent -fLogContent "WINDOWS APPS" -fLogContentComponent "windowsApps"
     if ($($config.windowsApps.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Apps." -fLogContentComponent "windowsApps"
+        fLogContent -fLogContent "Windows Apps is enabled." -fLogContentComponent "windowsApps"
         try {
             [array]$windowsApps = $($config.windowsApps.apps)
             foreach ($windowsApp in $windowsApps) {
@@ -275,18 +306,21 @@ Process {
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsApps"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Apps disabled." -fLogContentComponent "windowsApps"
+        fLogContent -fLogContent "Windows Apps is disabled." -fLogContentComponent "windowsApps"
     }
     #endregion
     #
     #region :: windowsFeatures
+    fLogContent -fLogContent "WINDOWS FEATURES" -fLogContentComponent "windowsFeatures"
     if ($($config.windowsFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Features." -fLogContentComponent "windowsFeatures"
+        fLogContent -fLogContent "Windows Features is enabled." -fLogContentComponent "windowsFeatures"
         try {
             [array]$windowsFeatures = $($config.windowsFeatures.features)
             foreach ($windowsFeature in $windowsFeatures) {
@@ -316,18 +350,21 @@ Process {
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Features disabled." -fLogContentComponent "windowsFeatures"
+        fLogContent -fLogContent "Windows Features is disabled." -fLogContentComponent "windowsFeatures"
     }
     #endregion
     #
     #region :: windowsOptionalFeatures
+    fLogContent -fLogContent "WINDOWS OPTIONAL FEATURES" -fLogContentComponent "windowsOptionalFeatures"
     if ($($config.windowsOptionalFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Optional Features." -fLogContentComponent "windowsOptionalFeatures"
+        fLogContent -fLogContent "Windows Optional Features is enabled." -fLogContentComponent "windowsOptionalFeatures"
         try {
             [array]$windowsOptionalFeatures = $($config.windowsOptionalFeatures.features)
             foreach ($windowsOptionalFeature in $windowsOptionalFeatures) {
@@ -357,27 +394,38 @@ Process {
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Optional Features disabled." -fLogContentComponent "windowsOptionalFeatures"
+        fLogContent -fLogContent "Windows Optional Features is disabled." -fLogContentComponent "windowsOptionalFeatures"
     }
     #endregion
     #
     #region :: windowsRegistry
+    fLogContent -fLogContent "WINDOWS REGISTRY ITEMS" -fLogContentComponent "windowsRegistry"
     if ($($config.windowsRegistry.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Registry items." -fLogContentComponent "windowsRegistry"
+        fLogContent -fLogContent "Windows Registry items is enabled" -fLogContentComponent "windowsRegistry"
         try {
             [array]$windowsRegistryItems = $($config.windowsRegistry.items)
             foreach ($windowsRegistryItem in $windowsRegistryItems) {
                 fLogContent -fLogContent "Processing $($windowsRegistryItem.description)." -fLogContentComponent "windowsRegistry"
                 if ($([int]$windowsRegistryItem.minOSbuild) -eq 0) {
+                    fLogContent -fLogContent "minOSbuild: not specified" -fLogContentComponent "windowsRegistry"
                     [int]$windowsRegistryItem.minOSbuild = $($([environment]::OSVersion.Version).Build)
                 }
+                else {
+                    fLogContent -fLogContent "minOSbuild: $($windowsRegistryItem.minOSbuild)" -fLogContentComponent "windowsRegistry"
+                }
                 if ($([int]$windowsRegistryItem.maxOSbuild) -eq 0) {
+                    fLogContent -fLogContent "maxOSbuild: not specified" -fLogContentComponent "windowsRegistry"
                     [int]$windowsRegistryItem.maxOSbuild = $($([environment]::OSVersion.Version).Build)
+                }
+                else {
+                    fLogContent -fLogContent "maxOSbuild: $($windowsRegistryItem.maxOSbuild)" -fLogContentComponent "windowsRegistry"
                 }
                 if ($($([environment]::OSVersion.Version).Build) -ge $([int]$windowsRegistryItem.minOSbuild) -and $($([environment]::OSVersion.Version).Build) -le $([int]$windowsRegistryItem.maxOSbuild)) {
                     switch ($($windowsRegistryItem.item).ToUpper()) {
@@ -394,23 +442,29 @@ Process {
                         }
                     }
                 }
+                else {
+                    fLogContent -fLogContent "item $($windowsRegistryItem.description) entry not for this OS build." -fLogContentComponent "windowsRegistry"
+                }
             }
         }
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsRegistry"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Registry items disabled." -fLogContentComponent "windowsRegistry"
+        fLogContent -fLogContent "Windows Registry items is disabled." -fLogContentComponent "windowsRegistry"
     }
     #endregion
     #
     #region :: windowsServices
+    fLogContent -fLogContent "WINDOWS SERVICES" -fLogContentComponent "windowsServices"
     if ($($config.windowsServices.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing Windows Services." -fLogContentComponent "windowsServices"
+        fLogContent -fLogContent "Windows Services is enabled." -fLogContentComponent "windowsServices"
         try {
             [array]$windowsServices = $($config.windowsServices.services)
             foreach ($windowsService in $windowsServices) {
@@ -438,19 +492,21 @@ Process {
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsServices"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "Windows Services disabled." -fLogContentComponent "windowsServices"
+        fLogContent -fLogContent "Windows Services is disabled." -fLogContentComponent "windowsServices"
     }
     #endregion
     #
-    #
     #region :: metadata
+    fLogContent -fLogContent "METADATA ITEMS" -fLogContentComponent "metadata"
     if ($($config.metadata.enabled) -eq $true) {
-        fLogContent -fLogContent "Processing metadata items." -fLogContentComponent "metadata"
+        fLogContent -fLogContent "Metadata items is enabled." -fLogContentComponent "metadata"
         try {
             switch ($($config.metadata.installBehavior).ToUpper()) {
                 "SYSTEM" {
@@ -461,7 +517,9 @@ Process {
                 }
                 Default {
                     fLogContent -fLogContent "ERROR: Processing metadata items failed." -fLogContentComponent "metadata"
-                    exit 1
+                    if ($exitOnError) {
+                        exit 1
+                    }
                 }
             }
             #metadata entries
@@ -483,13 +541,30 @@ Process {
         catch {
             $errMsg = $_.Exception.Message
             fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "metadata"
-            exit 1
+            if ($exitOnError) {
+                exit 1
+            }
         }
         finally {}
     }
     else {
-        fLogContent -fLogContent "metadata items disabled." -fLogContentComponent "metadata"
+        fLogContent -fLogContent "Metadata items is disabled." -fLogContentComponent "metadata"
     }
     #endregion
 }
-end {}
+end {
+    #region ckeaning-up
+    fLogContent -fLogContent "Finishing up" -fLogContentComponent "clean-up"
+    fLogContent -fLogContent "Cleaning up environment" -fLogContentComponent "clean-up"
+    try {
+        Remove-Variable -Name * -ErrorAction "SilentlyContinue"
+        $error.Clear()
+        [System.GC]::Collect()
+    }
+    catch {
+        $errMsg = $_.Exception.Message
+        fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "clean-up"
+    }
+    finally {}
+    #endregion
+}
