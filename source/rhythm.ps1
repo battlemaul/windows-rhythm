@@ -84,12 +84,19 @@ begin {
     function fLogContent () {
         <#
         .SYNOPSIS
+           Log-file function.
         .DESCRIPTION
+            Log-file function, write a single log line every time it’s called.
+            Each line in the log can have various attributes, log text, information about the component from which the fumction is called and an option to specify log file name for each entry.
+            Formatting echere to the CMTrace and Microsoft Intune log format.
         .PARAMETER fLogContent
+            Holds the string to write to the log file. If script is called with the -Verbose, this string will be sent to the console.
         .PARAMETER fLogContentComponent
+            Information about the component from which the fumction is called, e.g. a specific section in the script.
         .PARAMETER fLogContentfn
+            Option to specify log file name for each entry.
         .EXAMPLE
-            fLogContent -fLogContent "This is the log content." -fLogContentComponent "If applicable, add section, or component for log entry."
+            fLogContent -fLogContent "This is the log string." -fLogContentComponent "If applicable, add section, or component for log entry."
         #>
         [CmdletBinding()]
         param (
@@ -123,12 +130,21 @@ begin {
     function fRegistryItem () {
         <#
         .SYNOPSIS
+            Windows registry function.
         .DESCRIPTION
+            This function is used to modify Windows registry entries (add, update or remove).            
         .PARAMETER task
+            Parameter will determine if funtion should ADD (Update) or REMOVE the entry defines using the 'froot':\'fpath' fname and fvalue parameters.
         .PARAMETER froot
+            Parameter will define registry root, valid values: HKCR, HKCU, HKLM.
         .PARAMETER fpath
+            Parameter for assigning registry path, e.g. 'Software\Microsoft\Windows\CurrentVersion'.
         .PARAMETER fname
+            Parameter for assigning registry name, e.g. 'sample'.
+        .PARAMETER fpropertyType
+            Parameter for assigning property type, e.g. 'String', 'DWord' etc. 
         .PARAMETER fvalue
+            Parameter for assigning registry value.
         .EXAMPLE
             fRegistryItem -task "add" -froot "HKLM" -fpath "Software\Microsoft\Windows\CurrentVersion" -fname "Sample" -fpropertyType "DWORD" -fvalue "1"
         #>
@@ -216,6 +232,7 @@ begin {
                         else {
                             fLogContent -fLogContent "registry path [$($froot):\$($fpath)] exists." -fLogContentComponent "fRegistryItem"
                         }
+                        #Get current value if exist.
                         $fcurrentValue = $(Get-ItemProperty -path "$($froot):\$($fpath)" -name $fname -ErrorAction SilentlyContinue)."$fname"
                         if ($fcurrentValue -eq $fvalue) {
                             fLogContent -fLogContent "registry value already configured" -fLogContentComponent "fRegistryItem"
@@ -223,6 +240,7 @@ begin {
                         else {
                             fLogContent -fLogContent "registry value not found or different, forcing update: [$fpropertyType] $fname [ '$fcurrentValue' -> '$fvalue' ]" -fLogContentComponent "fRegistryItem"
                         }
+                        #Adding registry item.
                         New-ItemProperty -Path "$($froot):\$($fpath)" -Name "$fname" -PropertyType "$fpropertyType" -Value "$fvalue" -Force | Out-Null
                     }
                     catch {
@@ -234,7 +252,7 @@ begin {
                 }
                 "remove" {
                     try {
-                        #Test Registry key exists and delete if found.
+                        #Test if registry key exists and delete if found.
                         if (!(Get-ItemPropertyValue -Path "$($froot):\$($fpath)" -Name "$fname" -ErrorAction "SilentlyContinue")) {
                             fLogContent -fLogContent "registry value [$($froot):\$($fpath)] : $($fname) not found." -fLogContentComponent "fRegistryItem"
                         }
