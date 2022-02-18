@@ -15,7 +15,7 @@
     If no configuration file is defined, script will look for .\config.json. If the configuration is not found or invalid, the script will exit.
 .PARAMETER logFile
     Start script logging to the desired logfile.
-    If no log file is defined, the script will default to Windows rhythm log file within %ProgramData%\Microsoft\IntuneManagementExtension\Logs\ folder.
+    If no log file is defined, the script will default to log file within '%ProgramData%\Microsoft\IntuneManagementExtension\Logs' folder, file name <config.metadata.title>.log
 .PARAMETER exitOnError
     If an error occurs, control if script should exit-on-error. Default value is $false.
 .EXAMPLE
@@ -23,11 +23,11 @@
 .EXAMPLE
     .\rhythm.ps1 -configFile ".\usercfg.json"
 .EXAMPLE
-    .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\output.log" -Verbose
+    .\rhythm.ps1 -configFile ".\usercfg.json" -logFile ".\usercfg.log" -Verbose
 .NOTES
-	version: 0.9.5.0
+	version: 0.9.6.2
 	author: @dotjesper
-	date: February 17, 2022
+	date: February 18, 2022
 .LINK
     https://github.com/dotjesper/windows-rhythm
 #>
@@ -67,8 +67,14 @@ begin {
     }
     #
     #variables :: logfile
-    [string]$global:fLogContentpkg = "$($config.metadata.title -replace '[^a-zA-Z0-9]','-')"
-    [string]$global:fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
+    if ($($config.metadata.title)) {
+        [string]$global:fLogContentpkg = "$($config.metadata.title -replace '[^a-zA-Z0-9]','-')"
+        [string]$global:fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
+    }
+    else {
+        [string]$global:fLogContentpkg = "$(([io.fileinfo]$MyInvocation.MyCommand.Definition).BaseName -replace '[^a-zA-Z0-9]','-')"
+        [string]$global:fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$(([io.fileinfo]$MyInvocation.MyCommand.Definition).BaseName).log"
+    }
     if ($logfile.Length -gt 0) {
         [string]$global:fLogContentFile = $logfile
     }
@@ -79,6 +85,11 @@ begin {
         <#
         .SYNOPSIS
         .DESCRIPTION
+        .PARAMETER fLogContent
+        .PARAMETER fLogContentComponent
+        .PARAMETER fLogContentfn
+        .EXAMPLE
+            fLogContent -fLogContent "This is the log content." -fLogContentComponent "If applicable, add section, or component for log entry."
         #>
         [CmdletBinding()]
         param (
@@ -113,6 +124,13 @@ begin {
         <#
         .SYNOPSIS
         .DESCRIPTION
+        .PARAMETER task
+        .PARAMETER froot
+        .PARAMETER fpath
+        .PARAMETER fname
+        .PARAMETER fvalue
+        .EXAMPLE
+            fRegistryItem -task "add" -froot "HKLM" -fpath "Software\Microsoft\Windows\CurrentVersion" -fname "Sample" -fpropertyType "DWORD" -fvalue "1"
         #>
         [CmdletBinding()]
         param (
@@ -242,20 +260,21 @@ begin {
     #
     #region :: logfile environment entries
     [array]$logfileItems = @(
-        [pscustomobject]@{fLogContent = "## $($config.metadata.title) by $($config.metadata.developer)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Config file: $($configFile)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Config file version: $($config.metadata.version) | $($config.metadata.date)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Config file description: $($config.metadata.description)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Log file: $($fLogContentFile)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Command line: $($MyInvocation.Line)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Run script in 64 bit PowerShell: $($config.runConditions.runScriptIn64bitPowerShell)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Running 64 bit PowerShell: $([System.Environment]::Is64BitProcess)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Running elevated: $(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Detected user: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Detected keyboard layout Id: $((Get-Culture).KeyboardLayoutId)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Detected language mode: $($ExecutionContext.SessionState.LanguageMode)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Detected culture name: $((Get-Culture).Name)"; fLogContentComponent = "environment" }
-        [pscustomobject]@{fLogContent = "Detected OS build: $($([environment]::OSVersion.Version).Build)"; fLogContentComponent = "environment" }
+        [pscustomobject]@{fLogContent = "## $($config.metadata.title) by $($config.metadata.developer)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Config file: $($configFile)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Config file version: $($config.metadata.version) | $($config.metadata.date)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Config file description: $($config.metadata.description)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Log file: $($fLogContentFile)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Script name: $($MyInvocation.MyCommand.Name)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Command line: $($MyInvocation.Line)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Run script in 64 bit PowerShell: $($config.runConditions.runScriptIn64bitPowerShell)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Running 64 bit PowerShell: $([System.Environment]::Is64BitProcess)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Running elevated: $(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Detected user: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Detected keyboard layout Id: $((Get-Culture).KeyboardLayoutId)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Detected language mode: $($ExecutionContext.SessionState.LanguageMode)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Detected culture name: $((Get-Culture).Name)"; fLogContentComponent = "environment"}
+        [pscustomobject]@{fLogContent = "Detected OS build: $($([environment]::OSVersion.Version).Build)"; fLogContentComponent = "environment"}
     )
     foreach ($logfileItem in $logfileItems) {
         fLogContent -fLogContent "$($logfileItem.fLogContent)" -fLogContentComponent "$($logfileItem.fLogContentComponent)"
@@ -524,14 +543,14 @@ Process {
             }
             #metadata entries
             [array]$metadataItems = @(
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Comments"; Type = "String"; Value = "$($config.metadata.Comments)" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "DisplayName"; Type = "String"; Value = "$($config.metadata.title)" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "DisplayVersion"; Type = "String"; Value = "$($config.metadata.version)" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "InstallBehavior"; Type = "String"; Value = "$($config.metadata.installBehavior)" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "InstallDate"; Type = "String"; Value = "$(Get-Date -Format "yyyyMMdd")" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Publisher"; Type = "String"; Value = "$($config.metadata.publisher)" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "SystemComponent"; Type = "DWORD"; Value = "1" }
-                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Version"; Type = "String"; Value = "$($config.metadata.version)" }
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Comments"; Type = "String"; Value = "$($config.metadata.Comments)"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "DisplayName"; Type = "String"; Value = "$($config.metadata.title)"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "DisplayVersion"; Type = "String"; Value = "$($config.metadata.version)"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "InstallBehavior"; Type = "String"; Value = "$($config.metadata.installBehavior)"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "InstallDate"; Type = "String"; Value = "$(Get-Date -Format "yyyyMMdd")"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Publisher"; Type = "String"; Value = "$($config.metadata.publisher)"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "SystemComponent"; Type = "DWORD"; Value = "1"}
+                [pscustomobject]@{root = "$($metadataRoot)"; path = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$($config.metadata.guid)"; name = "Version"; Type = "String"; Value = "$($config.metadata.version)"}
             )
             foreach ($metadataItem in $metadataItems) {
                 fLogContent -fLogContent "adding $($metadataItem.root):\$($metadataItem.path) [$($metadataItem.Type)] $($metadataItem.name) ""$($metadataItem.Value)""." -fLogContentComponent "metadata"
