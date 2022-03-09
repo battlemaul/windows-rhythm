@@ -11,7 +11,7 @@ Status: In development
 [![Built for Windows 11](https://img.shields.io/badge/Buidt%20for-Windows%2011-blue?style=flat)](https://windows.com/ "Built for Windows 11")
 [![Built for Windows 10](https://img.shields.io/badge/Built%20for-Windows%2010-blue?style=flat)](https://windows.com/ "Built for Windows 10")
 
-[![PSScriptAnalyzer validated](https://img.shields.io/badge/PowerShell%20Script%20Analyzer%20validated-Yes-green?style=flat)](https://www.powershellgallery.com/packages/PSScriptAnalyzer/ "PowerShell Script Analyzer")
+[![PSScriptAnalyzer validated](https://img.shields.io/badge/PowerShell%20Script%20Analyzer%20validated-No-green?style=flat)](https://www.powershellgallery.com/packages/PSScriptAnalyzer/ "PowerShell Script Analyzer")
 
 This repository contains the source code for Windows rhythm.
 According to Wikipedia, Rhythm means a *"movement marked by the regulated succession of strong and weak elements, or of opposite or different conditions"*.
