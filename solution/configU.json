@@ -3,19 +3,20 @@
         {
             "enabled": true,
             "installBehavior": "USER",
-            "guid": "{9C40E387-53CF-423A-B3DF-E5874391BE7C}",
+            "guid": "{B0D5EC59-24E1-479B-8BAB-7C59060D4D4D}",
             "title": "Windows rhythm",
-            "description": "",
+            "description": "Windows rhythm user baseline configuration",
             "url": "",
-            "version": "1.2.1.0",
-            "date": "2022-02-17",
+            "version": "1.2.1.6",
+            "date": "2022-03-14",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
         }
     ],
     "runConditions": [
         {
-            "runScriptIn64bitPowerShell": true
+            "runScriptIn64bitPowerShell": true,
+            "requireReboot": false
         }
     ],
     "windowsRegistry": [
@@ -57,7 +58,7 @@
                 },
                 {
                     "description": "Hide 'Search' icon from Taskbar",
-                    "minOSbuild": "22000",
+                    "minOSbuild": "",
                     "maxOSbuild": "",
                     "item": "add",
                     "root": "HKCU",
@@ -89,7 +90,7 @@
                     "Value": "0"
                 },
                 {
-                    "description": "Hide 'Chat' icon from Taskbars",
+                    "description": "Hide 'Microsoft Teams Chat' icon from Taskbars",
                     "minOSbuild": "22000",
                     "maxOSbuild": "",
                     "item": "add",
@@ -98,6 +99,17 @@
                     "Name": "TaskbarMn",
                     "Type": "DWORD",
                     "Value": "0"
+                },
+                {
+                    "description": "Disbale 'Microsoft Teams Chat' auto-start",
+                    "minOSbuild": "22000",
+                    "maxOSbuild": "",
+                    "item": "add",
+                    "root": "HKCU",
+                    "Path": "Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\SystemAppData\\MicrosoftTeams_8wekyb3d8bbwe\\TeamsStartupTask",
+                    "Name": "State",
+                    "Type": "DWORD",
+                    "Value": "1"
                 },
                 {
                     "description": "Show Taskbar on all displays",

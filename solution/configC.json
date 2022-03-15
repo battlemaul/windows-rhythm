@@ -3,25 +3,32 @@
         {
             "enabled": true,
             "installBehavior": "SYSTEM",
-            "guid": "{FBBBD307-693B-4A32-B220-321BEC92A136}",
+            "guid": "{DC34940C-EAAC-4E24-B84A-B405871451AC}",
             "title": "Windows rhythm",
-            "description": "",
+            "description": "Windows rhythm computer baseline configuration",
             "url": "",
-            "version": "1.2.1.0",
-            "date": "2022-02-17",
+            "version": "1.2.1.6",
+            "date": "2022-03-14",
             "publisher": "dotjesper.com",
             "developer": "Jesper Nielsen"
         }
     ],
     "runConditions": [
         {
-            "runScriptIn64bitPowerShell": true
+            "runScriptIn64bitPowerShell": true,
+            "requireReboot": false
         }
     ],
     "windowsApps": [
         {
             "enabled": true,
             "apps": [
+                {
+                    "Name": "Clipchamp - Video Editor",
+                    "DisplayName": "Clipchamp.Clipchamp",
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
+                },
                 {
                     "Name": "Bing News",
                     "DisplayName": "Microsoft.BingNews",
@@ -115,32 +122,32 @@
                 {
                     "Name": "Xbox Live in-game experience",
                     "DisplayName": "Microsoft.Xbox.TCUI",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Xbox Console Companion",
                     "DisplayName": "Microsoft.XboxApp",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Xbox Game Bar Plugin",
                     "DisplayName": "Microsoft.XboxGameOverlay",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Xbox Game Bar",
                     "DisplayName": "Microsoft.XboxGamingOverlay",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Xbox Identity Provider",
                     "DisplayName": "Microsoft.XboxIdentityProvider",
-                    "Remove": false,
-                    "RemoveProvisionedPackage": false
+                    "Remove": true,
+                    "RemoveProvisionedPackage": true
                 },
                 {
                     "Name": "Groove Music",
@@ -162,6 +169,20 @@
             "enabled": true,
             "features": [
                 {
+                    "FeatureName": "Containers-DisposableClientVM",
+                    "DisplayName": "Windows Sandbox",
+                    "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
+                    "State": "LeaveAsIs",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "Microsoft-Hyper-V-All",
+                    "DisplayName": "Hyper-V",
+                    "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
+                    "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
                     "FeatureName": "MicrosoftWindowsPowerShellV2Root",
                     "DisplayName": "Windows PowerShell 2.0.",
                     "Description": "Adds or Removes Windows PowerShell 2.0.",
@@ -173,6 +194,13 @@
                     "DisplayName": "Windows PowerShell 2.0 Engine.",
                     "Description": "Adds or Removes Windows PowerShell 2.0 Engine.",
                     "State": "Disabled",
+                    "RestartNeeded": false
+                },
+                {
+                    "FeatureName": "NetFx3",
+                    "DisplayName": ".NET Framework 3.5 (includes .NET 2.0 and 3.0)",
+                    "Description": ".NET Framework 3.5 (includes .NET 2.0 and 3.0).",
+                    "State": "Enabled",
                     "RestartNeeded": false
                 },
                 {
@@ -207,20 +235,6 @@
                     "FeatureName": "WorkFolders-Client",
                     "DisplayName": "Work Folders Client",
                     "Description": "Allows file synchronization with a configured file server.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "Microsoft-Hyper-V-All",
-                    "DisplayName": "Hyper-V",
-                    "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "Containers-DisposableClientVM",
-                    "DisplayName": "Windows Sandbox",
-                    "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
                     "State": "Disabled",
                     "RestartNeeded": false
                 }
