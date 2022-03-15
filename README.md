@@ -1,6 +1,6 @@
 ---
-Title: README 
-Date: February 18, 2022
+Title: README
+Date: March 14, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -11,7 +11,8 @@ Status: In development
 [![Built for Windows 11](https://img.shields.io/badge/Buidt%20for-Windows%2011-blue?style=flat)](https://windows.com/ "Built for Windows 11")
 [![Built for Windows 10](https://img.shields.io/badge/Built%20for-Windows%2010-blue?style=flat)](https://windows.com/ "Built for Windows 10")
 
-[![PSScriptAnalyzer validated](https://img.shields.io/badge/PowerShell%20Script%20Analyzer%20validated-Yes-green?style=flat)](https://www.powershellgallery.com/packages/PSScriptAnalyzer/ "PowerShell Script Analyzer")
+[![PSScriptAnalyzer verified](https://img.shields.io/badge/PowerShell%20Script%20Analyzer%20verified-Yes-green?style=flat)](https://www.powershellgallery.com/packages/PSScriptAnalyzer/ "PowerShell Script Analyzer")
+[![PowerShell Constrained Language mode verified](https://img.shields.io/badge/PowerShell%20Constrained%20Language%20mode%20verified-Yes-green?style=flat)](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_language_modes/ "PowerShell Language mode")
 
 This repository contains the source code for Windows rhythm.
 According to Wikipedia, Rhythm means a *"movement marked by the regulated succession of strong and weak elements, or of opposite or different conditions"*.
@@ -70,7 +71,7 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 │  ├─ baselineServicesC.json
 │  ├─ baselineOfficeSettingsC.json
 │  ├─ baselineOfficeSettingsU.json
-├─ source
+├─ solution
 │  ├─ configC.json
 │  ├─ configU.json
 │  ├─ rhythm.ps1
@@ -86,19 +87,27 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 
 ***-configFile***
 
+*Type: String*
+
 Start **Windows rhythm** with the defined configuration file to be used for the task. If no configuration file is defined, the script will look for .\config.json. If the configuration is not found or invalid, the script will exit.
 
 ***-logFile***
+
+*Type: String*
 
 Start **Windows rhythm** logging to the desired logfile. If no log file is defined, the script will default to **Windows rhythm** log file within %ProgramData%\Microsoft\IntuneManagementExtension\Logs\ folder.
 
 ***-exitOnError***
 
+*Type: Switch*
+
 If an error occurs, *exitOnError* control if the script should exit-on-error. Default value is $false.
 
 ***-uninstall***
 
-Future parameter for use in Micrsoft Intune package deployment scenarios.
+*Type: Switch*
+
+Future parameter for use in Micrsoft Intune package deployment scenarios. Default value is $false.
 
 ***-Verbose***
 
@@ -112,7 +121,7 @@ Displays detailed information about the operation performed by **Windows rhythm*
 
 .\rhythm.ps1 -configFile ".\configU.json" -logFile ".\logfile.log"
 
-powershell.exe -NoLogo -ExecutionPolicy "AllSigned" -File ".\rhythm.ps1" -logFile "%temp%\output.log"
+powershell.exe -NoLogo -ExecutionPolicy "AllSigned" -File ".\rhythm.ps1" -configFile ".\configC.json"
 ```
 
 ## Disclaimer
@@ -131,6 +140,12 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.8.0 | March 14. 2022*
+
+*Version 0.9.7.0 | March 9. 2022*
+
+*Version 0.9.6.5 | March 6. 2022*
 
 *Version 0.9.6.2 | February 18. 2022*
 
