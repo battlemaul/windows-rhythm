@@ -1,350 +1,360 @@
 {
-    "metadata": [
-        {
-            "enabled": true,
-            "installBehavior": "SYSTEM",
-            "guid": "{DC34940C-EAAC-4E24-B84A-B405871451AC}",
-            "title": "Windows rhythm",
-            "description": "Windows rhythm computer baseline configuration",
-            "url": "",
-            "version": "1.2.1.6",
-            "date": "2022-03-14",
-            "publisher": "dotjesper.com",
-            "developer": "Jesper Nielsen"
-        }
-    ],
-    "runConditions": [
-        {
-            "runScriptIn64bitPowerShell": true,
-            "requireReboot": false
-        }
-    ],
-    "windowsApps": [
-        {
-            "enabled": true,
-            "apps": [
-                {
-                    "Name": "Clipchamp - Video Editor",
-                    "DisplayName": "Clipchamp.Clipchamp",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Bing News",
-                    "DisplayName": "Microsoft.BingNews",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Bing Weather",
-                    "DisplayName": "Microsoft.BingWeather",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Microsoft 3D Builder",
-                    "DisplayName": "Microsoft.3DBuilder",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Microsoft 3D Viewer",
-                    "DisplayName": "Microsoft.Microsoft3DViewer",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Office",
-                    "DisplayName": "Microsoft.MicrosoftOfficeHub",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Microsoft Solitaire Collection",
-                    "DisplayName": "Microsoft.MicrosoftSolitaireCollection",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Mixed Reality Portal",
-                    "DisplayName": "Microsoft.MixedReality.Portal",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "OneNote for Windows",
-                    "DisplayName": "Microsoft.Office.OneNote",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Excel Mobile",
-                    "DisplayName": "Microsoft.Office.Excel",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "PowerPoint Mobile",
-                    "DisplayName": "Microsoft.Office.PowerPoint",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Word Mobile",
-                    "DisplayName": "Microsoft.Office.Word",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Mobile Plans",
-                    "DisplayName": "Microsoft.OneConnect",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Skype",
-                    "DisplayName": "Microsoft.SkypeApp",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Microsoft Pay",
-                    "DisplayName": "Microsoft.Wallet",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Mail and Calendar",
-                    "DisplayName": "Microsoft.windowscommunicationsapps",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Xbox Live in-game experience",
-                    "DisplayName": "Microsoft.Xbox.TCUI",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Xbox Console Companion",
-                    "DisplayName": "Microsoft.XboxApp",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Xbox Game Bar Plugin",
-                    "DisplayName": "Microsoft.XboxGameOverlay",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Xbox Game Bar",
-                    "DisplayName": "Microsoft.XboxGamingOverlay",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Xbox Identity Provider",
-                    "DisplayName": "Microsoft.XboxIdentityProvider",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Groove Music",
-                    "DisplayName": "Microsoft.ZuneMusic",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                },
-                {
-                    "Name": "Movies & TV",
-                    "DisplayName": "Microsoft.ZuneVideo",
-                    "Remove": true,
-                    "RemoveProvisionedPackage": true
-                }
-            ]
-        }
-    ],
-    "windowsFeatures": [
-        {
-            "enabled": true,
-            "features": [
-                {
-                    "FeatureName": "Containers-DisposableClientVM",
-                    "DisplayName": "Windows Sandbox",
-                    "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
-                    "State": "LeaveAsIs",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "Microsoft-Hyper-V-All",
-                    "DisplayName": "Hyper-V",
-                    "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "MicrosoftWindowsPowerShellV2Root",
-                    "DisplayName": "Windows PowerShell 2.0.",
-                    "Description": "Adds or Removes Windows PowerShell 2.0.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "MicrosoftWindowsPowerShellV2",
-                    "DisplayName": "Windows PowerShell 2.0 Engine.",
-                    "Description": "Adds or Removes Windows PowerShell 2.0 Engine.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "NetFx3",
-                    "DisplayName": ".NET Framework 3.5 (includes .NET 2.0 and 3.0)",
-                    "Description": ".NET Framework 3.5 (includes .NET 2.0 and 3.0).",
-                    "State": "Enabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol",
-                    "DisplayName": "SMB 1.0/CIFS File Sharing Support",
-                    "Description": "Support for the SMB 1.0/CIFS file sharing protocol, and the Computer Browser protocol.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Client",
-                    "DisplayName": "SMB 1.0/CIFS Client",
-                    "Description": "Support for the SMB 1.0/CIFS client for accessing legacy servers.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Server",
-                    "DisplayName": "SMB 1.0/CIFS Server",
-                    "Description": "Support for the SMB 1.0/CIFS file server for sharing data with legacy clients and browsing the network neighborhood.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "SMB1Protocol-Deprecation",
-                    "DisplayName": "SMB 1.0/CIFS Automatic Removal",
-                    "Description": "Automatically removes support for the legacy SMB 1.0/CIFS protocol when such support isn't actively needed during normal system usage.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                },
-                {
-                    "FeatureName": "WorkFolders-Client",
-                    "DisplayName": "Work Folders Client",
-                    "Description": "Allows file synchronization with a configured file server.",
-                    "State": "Disabled",
-                    "RestartNeeded": false
-                }
-            ]
-        }
-    ],
-    "windowsOptionalFeatures": [
-        {
-            "enabled": true,
-            "features": [
-                {
-                    "Name": "Media.WindowsMediaPlayer~~~~0.0.12.0",
-                    "DisplayName": "Windows Media Player",
-                    "Description": "Play audio and video files on your local machine and on the Internet",
-                    "State": "NotPresent",
-                    "RestartNeeded": false
-                }
-            ]
-        }
-    ],
-    "windowsRegistry": [
-        {
-            "enabled": true,
-            "items": [
-                {
-                    "description": "Block Azure AD Workplace join in 3rd-part tenants",
-                    "minOSbuild": "",
-                    "maxOSbuild": "",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "Software\\Policies\\Microsoft\\Windows\\WorkplaceJoin",
-                    "Name": "BlockAADWorkplaceJoin",
-                    "Type": "DWORD",
-                    "Value": "1"
-                },
-                {
-                    "description": "Show 'This PC' on Desktop",
-                    "minOSbuild": "",
-                    "maxOSbuild": "",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\HideDesktopIcons\\NewStartPanel",
-                    "Name": "{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
-                    "Type": "DWORD",
-                    "Value": "0"
-                },
-                {
-                    "description": "Enable Additional LSA Protection",
-                    "minOSbuild": "",
-                    "maxOSbuild": "",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "System\\CurrentControlSet\\Control\\Lsa",
-                    "Name": "RunAsPPL",
-                    "Type": "DWORD",
-                    "Value": "1"
-                },
-                {
-                    "description": "Enable Additional LSA Protection",
-                    "minOSbuild": "",
-                    "maxOSbuild": "",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "System\\CurrentControlSet\\Control\\Lsa",
-                    "Name": "DisableDomainCreds",
-                    "Type": "DWORD",
-                    "Value": "1"
-                },
-                {
-                    "description": "Enable Automatically Adjust Active Hours setting",
-                    "minOSbuild": "",
-                    "maxOSbuild": "19044",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "Software\\Microsoft\\WindowsUpdate\\UX\\Settings",
-                    "Name": "SmartActiveHoursState",
-                    "Type": "DWORD",
-                    "Value": "1"
-                },
-                {
-                    "description": "Disable Widgets",
-                    "minOSbuild": "30000",
-                    "maxOSbuild": "",
-                    "item": "add",
-                    "root": "HKLM",
-                    "Path": "Software\\Policies\\Microsoft\\Dsh",
-                    "Name": "AllowNewsAndInterests",
-                    "Type": "DWORD",
-                    "Value": "0"
-                }
-            ]
-        }
-    ],
-    "windowsServices": [
-        {
-            "enabled": true,
-            "services": [
-                {
-                    "Name": "XboxGipSvc",
-                    "DisplayName": "Xbox Accessory Management Service",
-                    "StartType": "Manual",
-                    "StopIfRunning": false
-                },
-                {
-                    "Name": "XboxNetApiSvc",
-                    "DisplayName": "Xbox Live Networking Service",
-                    "StartType": "Manual",
-                    "StopIfRunning": false
-                }
-            ]
-        }
-    ]
+    "metadata": {
+        "enabled": true,
+        "installBehavior": "SYSTEM",
+        "guid": "{DC34940C-EAAC-4E24-B84A-B405871451AC}",
+        "title": "Windows rhythm-DSC-SYSTEM",
+        "description": "Windows desired state configuration",
+        "url": "",
+        "version": "1.3.2.1",
+        "date": "2022-03-28",
+        "publisher": "dotjesper.com",
+        "developer": "Jesper Nielsen"
+    },
+    "runConditions": {
+        "runScriptIn64bitPowerShell": true,
+        "requireReboot": false
+    },
+    "windowsApps": {
+        "enabled": true,
+        "apps": [
+            {
+                "Name": "Bing News",
+                "DisplayName": "Microsoft.BingNews",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Bing Weather",
+                "DisplayName": "Microsoft.BingWeather",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Clipchamp - Video Editor",
+                "DisplayName": "Clipchamp.Clipchamp",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Microsoft 3D Builder",
+                "DisplayName": "Microsoft.3DBuilder",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Microsoft 3D Viewer",
+                "DisplayName": "Microsoft.Microsoft3DViewer",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Office",
+                "DisplayName": "Microsoft.MicrosoftOfficeHub",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Solitaire Collection",
+                "DisplayName": "Microsoft.MicrosoftSolitaireCollection",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Mixed Reality Portal",
+                "DisplayName": "Microsoft.MixedReality.Portal",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Mobile Plans",
+                "DisplayName": "Microsoft.OneConnect",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Paint 3D",
+                "DisplayName": "Microsoft.MSPaint",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Microsoft Pay",
+                "DisplayName": "Microsoft.Wallet",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Mail and Calendar",
+                "DisplayName": "Microsoft.windowscommunicationsapps",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "People",
+                "DisplayName": "Microsoft.People",
+                "Remove": false,
+                "RemoveProvisionedPackage": false
+            },
+            {
+                "Name": "Skype",
+                "DisplayName": "Microsoft.SkypeApp",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Sticky Notes",
+                "DisplayName": "Microsoft.MicrosoftStickyNotes",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Groove Music",
+                "DisplayName": "Microsoft.ZuneMusic",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Movies & TV",
+                "DisplayName": "Microsoft.ZuneVideo",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Console Companion",
+                "DisplayName": "Microsoft.XboxApp",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Game Bar",
+                "DisplayName": "Microsoft.XboxGamingOverlay",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Game Bar Plugin",
+                "DisplayName": "Microsoft.XboxGameOverlay",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Identity Provider",
+                "DisplayName": "Microsoft.XboxIdentityProvider",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Speech to Text Overlay",
+                "DisplayName": "Microsoft.XboxSpeechToTextOverlay",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Xbox Live in-game experience",
+                "DisplayName": "Microsoft.Xbox.TCUI",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "OneNote for Windows",
+                "DisplayName": "Microsoft.Office.OneNote",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Excel Mobile",
+                "DisplayName": "Microsoft.Office.Excel",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "PowerPoint Mobile",
+                "DisplayName": "Microsoft.Office.PowerPoint",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            },
+            {
+                "Name": "Word Mobile",
+                "DisplayName": "Microsoft.Office.Word",
+                "Remove": true,
+                "RemoveProvisionedPackage": true
+            }
+        ]
+    },
+    "windowsFeatures": {
+        "enabled": true,
+        "features": [
+            {
+                "FeatureName": "Containers-DisposableClientVM",
+                "DisplayName": "Windows Sandbox",
+                "Description": "Enables the dependencies required to run Windows Sandbox scenarios.",
+                "State": "LeaveAsIs",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "Microsoft-Hyper-V-All",
+                "DisplayName": "Hyper-V",
+                "Description": "Provides services and management tools for creating and running virtual machines and their resources.",
+                "State": "LeaveAsIs",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "MicrosoftWindowsPowerShellV2Root",
+                "DisplayName": "Windows PowerShell 2.0.",
+                "Description": "Adds or Removes Windows PowerShell 2.0.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "MicrosoftWindowsPowerShellV2",
+                "DisplayName": "Windows PowerShell 2.0 Engine.",
+                "Description": "Adds or Removes Windows PowerShell 2.0 Engine.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "NetFx3",
+                "DisplayName": ".NET Framework 3.5 (includes .NET 2.0 and 3.0)",
+                "Description": ".NET Framework 3.5 (includes .NET 2.0 and 3.0).",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "SMB1Protocol",
+                "DisplayName": "SMB 1.0/CIFS File Sharing Support",
+                "Description": "Support for the SMB 1.0/CIFS file sharing protocol, and the Computer Browser protocol.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "SMB1Protocol-Client",
+                "DisplayName": "SMB 1.0/CIFS Client",
+                "Description": "Support for the SMB 1.0/CIFS client for accessing legacy servers.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "SMB1Protocol-Server",
+                "DisplayName": "SMB 1.0/CIFS Server",
+                "Description": "Support for the SMB 1.0/CIFS file server for sharing data with legacy clients and browsing the network neighborhood.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "SMB1Protocol-Deprecation",
+                "DisplayName": "SMB 1.0/CIFS Automatic Removal",
+                "Description": "Automatically removes support for the legacy SMB 1.0/CIFS protocol when such support isn't actively needed during normal system usage.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            },
+            {
+                "FeatureName": "WorkFolders-Client",
+                "DisplayName": "Work Folders Client",
+                "Description": "Allows file synchronization with a configured file server.",
+                "State": "Disabled",
+                "RestartNeeded": false
+            }
+        ]
+    },
+    "windowsOptionalFeatures": {
+        "enabled": true,
+        "features": [
+            {
+                "Name": "Media.WindowsMediaPlayer~~~~0.0.12.0",
+                "DisplayName": "Windows Media Player",
+                "Description": "Play audio and video files on your local machine and on the Internet",
+                "State": "NotPresent",
+                "RestartNeeded": false
+            }
+        ]
+    },
+    "windowsRegistry": {
+        "enabled": true,
+        "items": [
+            {
+                "description": "Block Azure AD Workplace join in 3rd-part tenants",
+                "minOSbuild": "",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "Software\\Policies\\Microsoft\\Windows\\WorkplaceJoin",
+                "Name": "BlockAADWorkplaceJoin",
+                "Type": "DWORD",
+                "Value": "1"
+            },
+            {
+                "description": "Show 'This PC' on Desktop",
+                "minOSbuild": "",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\HideDesktopIcons\\NewStartPanel",
+                "Name": "{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+                "Type": "DWORD",
+                "Value": "0"
+            },
+            {
+                "description": "Enable Additional LSA Protection",
+                "minOSbuild": "",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "System\\CurrentControlSet\\Control\\Lsa",
+                "Name": "RunAsPPL",
+                "Type": "DWORD",
+                "Value": "1"
+            },
+            {
+                "description": "Enable Additional LSA Protection",
+                "minOSbuild": "",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "System\\CurrentControlSet\\Control\\Lsa",
+                "Name": "DisableDomainCreds",
+                "Type": "DWORD",
+                "Value": "1"
+            },
+            {
+                "description": "Enable Automatically Adjust Active Hours setting",
+                "minOSbuild": "",
+                "maxOSbuild": "19044",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "Software\\Microsoft\\WindowsUpdate\\UX\\Settings",
+                "Name": "SmartActiveHoursState",
+                "Type": "DWORD",
+                "Value": "1"
+            },
+            {
+                "description": "Disable Widgets",
+                "minOSbuild": "30000",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKLM",
+                "Path": "Software\\Policies\\Microsoft\\Dsh",
+                "Name": "AllowNewsAndInterests",
+                "Type": "DWORD",
+                "Value": "0"
+            }
+        ]
+    },
+    "windowsServices": {
+        "enabled": true,
+        "services": [
+            {
+                "Name": "XboxGipSvc",
+                "DisplayName": "Xbox Accessory Management Service",
+                "StartType": "Manual",
+                "StopIfRunning": false
+            },
+            {
+                "Name": "XboxNetApiSvc",
+                "DisplayName": "Xbox Live Networking Service",
+                "StartType": "Manual",
+                "StopIfRunning": false
+            }
+        ]
+    }
 }
