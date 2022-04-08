@@ -1,6 +1,6 @@
 ---
 Title: README
-Date: March 14, 2022
+Date: April 8, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -140,6 +140,8 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.8.2 | April 8. 2022*
 
 *Version 0.9.8.0 | March 14. 2022*
 
