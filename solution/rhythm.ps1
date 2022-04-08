@@ -1,5 +1,5 @@
 ﻿<# PSScriptInfo
-.VERSION 0.9.8.0
+.VERSION 0.9.8.2
 .GUID A86971BB-9C5B-4540-B5C7-13CCDDE330EB
 .AUTHOR @dotjesper
 .COMPANYNAME dotjesper.com
@@ -34,6 +34,8 @@
     If no log file is defined, the script will default to log file within '%ProgramData%\Microsoft\IntuneManagementExtension\Logs' folder, file name <config.metadata.title>.log
 .PARAMETER exitOnError
     If an error occurs, control if script should exit-on-error. Default value is $false.
+.PARAMETER runSilent
+    Set ProgressPreference to SilentlyContinue, hiding powershell progress bars. Default value is $true.
 .EXAMPLE
     .\rhythm.ps1
 .EXAMPLE
@@ -53,12 +55,14 @@ param (
     [Parameter(Mandatory = $false)]
     [switch]$exitOnError,
     [Parameter(Mandatory = $false)]
+    [bool]$runSilent = $true,
+    [Parameter(Mandatory = $false)]
     [switch]$uninstall
 )
 begin {
-    #variables :: environment
-    #
-    #variables :: configuation file
+    #region :: environment
+    #endregion
+    #region :: configuation file
     if (Test-Path -Path $configFile -PathType Leaf) {
         try {
             $config = Get-Content -Path $configFile -Raw
@@ -75,8 +79,17 @@ begin {
         Write-Output -InputObject "> Go to https://github.com/dotjesper/windows-rhythm/ to download sample configuration files."
         exit 1
     }
-    #
-    #variables :: logfile
+    #endregion
+    #region :: environment configurations
+    [bool]$requireReboot = $($config.runConditions.requireReboot)
+    [string]$envProgressPreference = $ProgressPreference
+    [string]$envWarningPreference = $WarningPreference
+    if ($runSilent) {
+        $ProgressPreference = "SilentlyContinue"
+        $WarningPreference = "SilentlyContinue"
+    }
+    #endregion
+    #region :: logfile
     if ($($config.metadata.title)) {
         [string]$fLogContentpkg = "$($config.metadata.title -replace '[^a-zA-Z0-9]','-')"
         [string]$fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
@@ -86,8 +99,26 @@ begin {
         [string]$fLogContentFile = "$($Env:ProgramData)\Microsoft\IntuneManagementExtension\Logs\$fLogContentpkg.log"
     }
     if ($logfile.Length -gt 0) {
-        [string]$fLogContentFile = $logfile
+        $logfileFullPath = Resolve-Path $logfile -ErrorAction SilentlyContinue -ErrorVariable _frperror
+        if ($logfileFullPath) {
+            [string]$fLogContentFile = $logfileFullPath
+        }
+        else {
+            [string]$fLogContentFile = $_frperror[0].TargetObject
+        }
     }
+    #
+    try {
+        $fileChk = $(New-Object -TypeName System.IO.FileInfo -ArgumentList $($fLogContentFile)).OpenWrite();
+        Write-Verbose -Message "$fLogContentFile is writeable: $($fileChk.CanWrite)"
+        $fileChk.Close();
+    }
+    catch {
+        $fLogContentDisable = $true
+        Write-Warning -Message "Unable to write to output file $fLogContentFile"
+        Write-Warning -Message $_.Exception.Message
+    }
+    finally {}
     #endregion
     #
     #region :: functions
@@ -122,17 +153,22 @@ begin {
             $ftime = $(Get-Date -Format "HH:mm:ss.fffffff")
         }
         process {
-            try {
-                if (!(Test-Path -Path "$(Split-Path -Path $fLogContentfn)")) {
-                    New-Item -itemType "Directory" -Path "$(Split-Path -Path $fLogContentfn)" | Out-Null
+            if ($fLogContentDisable) {
+
+            }
+            else {
+                try {
+                    if (-not (Test-Path -Path "$(Split-Path -Path $fLogContentfn)")) {
+                        New-Item -itemType "Directory" -Path "$(Split-Path -Path $fLogContentfn)" | Out-Null
+                    }
+                    Add-Content -Path $fLogContentfn -Value "<![LOG[[$fLogContentpkg] $($fLogContent)]LOG]!><time=""$($ftime)"" date=""$($fdate)"" component=""$fLogContentComponent"" context="""" type="""" thread="""" file="""">" -Encoding "UTF8" | Out-Null
                 }
-                Add-Content -Path $fLogContentfn -Value "<![LOG[[$fLogContentpkg] $($fLogContent)]LOG]!><time=""$($ftime)"" date=""$($fdate)"" component=""$fLogContentComponent"" context="""" type="""" thread="""" file="""">" -Encoding "UTF8" | Out-Null
+                catch {
+                    throw $_.Exception.Message
+                    exit 1
+                }
+                finally {}
             }
-            catch {
-                throw $_.Exception.Message
-                exit 1
-            }
-            finally {}
             Write-Verbose -Message "$($fLogContent)"
         }
         end {}
@@ -227,7 +263,7 @@ begin {
                 "add" {
                     try {
                         #Test Registry path exists and create if not found.
-                        if (!(Test-Path -Path "$($froot):\$($fpath)")) {
+                        if (-not (Test-Path -Path "$($froot):\$($fpath)")) {
                             fLogContent -fLogContent "registry path [$($froot):\$($fpath)] not found." -fLogContentComponent "fRegistryItem"
                             try {
                                 New-Item -Path "$($froot):\$($fpath)" -Force | Out-Null
@@ -263,7 +299,7 @@ begin {
                 "remove" {
                     try {
                         #Test if registry key exists and delete if found.
-                        if (!(Get-ItemPropertyValue -Path "$($froot):\$($fpath)" -Name "$fname" -ErrorAction "SilentlyContinue")) {
+                        if (-not (Get-ItemPropertyValue -Path "$($froot):\$($fpath)" -Name "$fname" -ErrorAction "SilentlyContinue")) {
                             fLogContent -fLogContent "registry value [$($froot):\$($fpath)] : $($fname) not found." -fLogContentComponent "fRegistryItem"
                         }
                         else {
@@ -370,12 +406,17 @@ process {
                 [array]$AppxPackage = Get-AppxPackage -AllUsers -Name $($windowsApp.DisplayName) -Verbose:$false
                 if ($AppxPackage) {
                     fLogContent -fLogContent "$($windowsApp.Name) is present." -fLogContentComponent "windowsApps"
-                    fLogContent -fLogContent "$($windowsApp.Name), $($windowsApp.DisplayName), $($AppxPackage.PackageFullName), $($AppxPackage.Version)." -fLogContentComponent "windowsApps"
-                    fLogContent -fLogContent "$($windowsApp.Name) remove: $($windowsApp.Remove)." -fLogContentComponent "windowsApps"
+                    fLogContent -fLogContent "$($windowsApp.Name) is bundle: $($AppxPackage.IsBundle)." -fLogContentComponent "windowsApps"
+                    fLogContent -fLogContent "$($windowsApp.Name) is non-removable: $($AppxPackage.NonRemovable)." -fLogContentComponent "windowsApps"
                     if ($($windowsApp.Remove) -eq $true) {
                         fLogContent -fLogContent "$($windowsApp.Name) is being removed from all users." -fLogContentComponent "windowsApps"
+                        fLogContent -fLogContent "$($windowsApp.Name) :: $($AppxPackage.Name)." -fLogContentComponent "windowsApps"
+                        fLogContent -fLogContent "$($windowsApp.Name) :: $($AppxPackage.PackageFullName)." -fLogContentComponent "windowsApps"
+                        fLogContent -fLogContent "$($windowsApp.Name) :: $($AppxPackage.PackageFamilyName)." -fLogContentComponent "windowsApps"
+                        fLogContent -fLogContent "$($windowsApp.Name) :: $($AppxPackage.Version)." -fLogContentComponent "windowsApps"
                         try {
                             Remove-AppxPackage -AllUsers -Package "$($AppxPackage.PackageFullName)" -Verbose:$false | Out-Null
+                            #Get-AppxPackage -PackageTypeFilter Main, Bundle, Resource | Where-Object {$_.PackageFullName -eq "$($AppxPackage.PackageFullName)"} | Remove-AppxPackage -Allusers -Verbose:$false
                         }
                         catch {
                             $errMsg = $_.Exception.Message
@@ -469,11 +510,19 @@ process {
                     switch ($($windowsFeature.State).ToUpper()) {
                         "ENABLED" {
                             fLogContent -fLogContent "enabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
-                            Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -NoRestart -Verbose:$false | Out-Null
+                            $windowsFeatureResult = Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -NoRestart -Verbose:$false | Out-Null
+                            if ($windowsFeatureResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished enabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
                         }
                         "DISABLED" {
                             fLogContent -fLogContent "disabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
-                            Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -NoRestart -Verbose:$false | Out-Null
+                            $windowsFeatureResult = Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -NoRestart -Verbose:$false
+                            if ($windowsFeatureResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished disabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
                         }
                         Default {
                             fLogContent -fLogContent "unsupported state $($windowsFeature.DisplayName) [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
@@ -523,7 +572,11 @@ process {
                     "INSTALLED" {
                         fLogContent -fLogContent "installing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
                         try {
-                            Add-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false | Out-Null
+                            $windowsCapabilityResult = Add-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
+                            if ($windowsCapabilityResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished installing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
                         }
                         catch {
                             $errMsg = $_.Exception.Message
@@ -537,7 +590,11 @@ process {
                     "NOTPRESENT" {
                         fLogContent -fLogContent "removing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
                         try {
-                            Remove-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false | Out-Null
+                            $windowsCapabilityResult = Remove-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
+                            if ($windowsCapabilityResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished removing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
                         }
                         catch {
                             $errMsg = $_.Exception.Message
@@ -703,207 +760,15 @@ process {
     #endregion
 }
 end {
+    #region :: resetting run Preference
+    $ProgressPreference = $envProgressPreference
+    $WarningPreference = $envWarningPreference
+    #endregion
+    fLogContent -fLogContent "Restart nedded: $requireReboot" -fLogContentComponent "clean-up"
     #region :: cleaning-up
     fLogContent -fLogContent "Finishing up" -fLogContentComponent "clean-up"
     fLogContent -fLogContent "Cleaning up environment" -fLogContentComponent "clean-up"
     Remove-Variable -Name * -ErrorAction "SilentlyContinue"
     #$error.Clear()
-    #[System.GC]::Collect()
     #endregion
 }
-
-# SIG # Begin signature block
-# MIIkIwYJKoZIhvcNAQcCoIIkFDCCJBACAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
-# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUwSvH+jOKYCmjFsqfiqM1e/0N
-# EHGggh47MIIE/jCCA+agAwIBAgIQDUJK4L46iP9gQCHOFADw3TANBgkqhkiG9w0B
-# AQsFADByMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYD
-# VQQLExB3d3cuZGlnaWNlcnQuY29tMTEwLwYDVQQDEyhEaWdpQ2VydCBTSEEyIEFz
-# c3VyZWQgSUQgVGltZXN0YW1waW5nIENBMB4XDTIxMDEwMTAwMDAwMFoXDTMxMDEw
-# NjAwMDAwMFowSDELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMu
-# MSAwHgYDVQQDExdEaWdpQ2VydCBUaW1lc3RhbXAgMjAyMTCCASIwDQYJKoZIhvcN
-# AQEBBQADggEPADCCAQoCggEBAMLmYYRnxYr1DQikRcpja1HXOhFCvQp1dU2UtAxQ
-# tSYQ/h3Ib5FrDJbnGlxI70Tlv5thzRWRYlq4/2cLnGP9NmqB+in43Stwhd4CGPN4
-# bbx9+cdtCT2+anaH6Yq9+IRdHnbJ5MZ2djpT0dHTWjaPxqPhLxs6t2HWc+xObTOK
-# fF1FLUuxUOZBOjdWhtyTI433UCXoZObd048vV7WHIOsOjizVI9r0TXhG4wODMSlK
-# XAwxikqMiMX3MFr5FK8VX2xDSQn9JiNT9o1j6BqrW7EdMMKbaYK02/xWVLwfoYer
-# vnpbCiAvSwnJlaeNsvrWY4tOpXIc7p96AXP4Gdb+DUmEvQECAwEAAaOCAbgwggG0
-# MA4GA1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMBYGA1UdJQEB/wQMMAoGCCsG
-# AQUFBwMIMEEGA1UdIAQ6MDgwNgYJYIZIAYb9bAcBMCkwJwYIKwYBBQUHAgEWG2h0
-# dHA6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzAfBgNVHSMEGDAWgBT0tuEgHf4prtLk
-# YaWyoiWyyBc1bjAdBgNVHQ4EFgQUNkSGjqS6sGa+vCgtHUQ23eNqerwwcQYDVR0f
-# BGowaDAyoDCgLoYsaHR0cDovL2NybDMuZGlnaWNlcnQuY29tL3NoYTItYXNzdXJl
-# ZC10cy5jcmwwMqAwoC6GLGh0dHA6Ly9jcmw0LmRpZ2ljZXJ0LmNvbS9zaGEyLWFz
-# c3VyZWQtdHMuY3JsMIGFBggrBgEFBQcBAQR5MHcwJAYIKwYBBQUHMAGGGGh0dHA6
-# Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBPBggrBgEFBQcwAoZDaHR0cDovL2NhY2VydHMu
-# ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0U0hBMkFzc3VyZWRJRFRpbWVzdGFtcGluZ0NB
-# LmNydDANBgkqhkiG9w0BAQsFAAOCAQEASBzctemaI7znGucgDo5nRv1CclF0CiNH
-# o6uS0iXEcFm+FKDlJ4GlTRQVGQd58NEEw4bZO73+RAJmTe1ppA/2uHDPYuj1UUp4
-# eTZ6J7fz51Kfk6ftQ55757TdQSKJ+4eiRgNO/PT+t2R3Y18jUmmDgvoaU+2QzI2h
-# F3MN9PNlOXBL85zWenvaDLw9MtAby/Vh/HUIAHa8gQ74wOFcz8QRcucbZEnYIpp1
-# FUL1LTI4gdr0YKK6tFL7XOBhJCVPst/JKahzQ1HavWPWH1ub9y4bTxMd90oNcX6X
-# t/Q/hOvB46NJofrOp79Wz7pZdmGJX36ntI5nePk2mOHLKNpbh6aKLzCCBTEwggQZ
-# oAMCAQICEAqhJdbWMht+QeQF2jaXwhUwDQYJKoZIhvcNAQELBQAwZTELMAkGA1UE
-# BhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3LmRpZ2lj
-# ZXJ0LmNvbTEkMCIGA1UEAxMbRGlnaUNlcnQgQXNzdXJlZCBJRCBSb290IENBMB4X
-# DTE2MDEwNzEyMDAwMFoXDTMxMDEwNzEyMDAwMFowcjELMAkGA1UEBhMCVVMxFTAT
-# BgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEx
-# MC8GA1UEAxMoRGlnaUNlcnQgU0hBMiBBc3N1cmVkIElEIFRpbWVzdGFtcGluZyBD
-# QTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL3QMu5LzY9/3am6gpnF
-# OVQoV7YjSsQOB0UzURB90Pl9TWh+57ag9I2ziOSXv2MhkJi/E7xX08PhfgjWahQA
-# OPcuHjvuzKb2Mln+X2U/4Jvr40ZHBhpVfgsnfsCi9aDg3iI/Dv9+lfvzo7oiPhis
-# EeTwmQNtO4V8CdPuXciaC1TjqAlxa+DPIhAPdc9xck4Krd9AOly3UeGheRTGTSQj
-# MF287DxgaqwvB8z98OpH2YhQXv1mblZhJymJhFHmgudGUP2UKiyn5HU+upgPhH+f
-# MRTWrdXyZMt7HgXQhBlyF/EXBu89zdZN7wZC/aJTKk+FHcQdPK/P2qwQ9d2srOlW
-# /5MCAwEAAaOCAc4wggHKMB0GA1UdDgQWBBT0tuEgHf4prtLkYaWyoiWyyBc1bjAf
-# BgNVHSMEGDAWgBRF66Kv9JLLgjEtUYunpyGd823IDzASBgNVHRMBAf8ECDAGAQH/
-# AgEAMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAKBggrBgEFBQcDCDB5BggrBgEF
-# BQcBAQRtMGswJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBD
-# BggrBgEFBQcwAoY3aHR0cDovL2NhY2VydHMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0
-# QXNzdXJlZElEUm9vdENBLmNydDCBgQYDVR0fBHoweDA6oDigNoY0aHR0cDovL2Ny
-# bDQuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0QXNzdXJlZElEUm9vdENBLmNybDA6oDig
-# NoY0aHR0cDovL2NybDMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0QXNzdXJlZElEUm9v
-# dENBLmNybDBQBgNVHSAESTBHMDgGCmCGSAGG/WwAAgQwKjAoBggrBgEFBQcCARYc
-# aHR0cHM6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzALBglghkgBhv1sBwEwDQYJKoZI
-# hvcNAQELBQADggEBAHGVEulRh1Zpze/d2nyqY3qzeM8GN0CE70uEv8rPAwL9xafD
-# DiBCLK938ysfDCFaKrcFNB1qrpn4J6JmvwmqYN92pDqTD/iy0dh8GWLoXoIlHsS6
-# HHssIeLWWywUNUMEaLLbdQLgcseY1jxk5R9IEBhfiThhTWJGJIdjjJFSLK8pieV4
-# H9YLFKWA1xJHcLN11ZOFk362kmf7U2GJqPVrlsD0WGkNfMgBsbkodbeZY4UijGHK
-# eZR+WfyMD+NvtQEmtmyl7odRIeRYYJu6DC0rbaLEfrvEJStHAgh8Sa4TtuF8QkIo
-# xhhWz0E0tmZdtnR79VYzIi8iNrJLokqV2PWmjlIwggWQMIIDeKADAgECAhAFmxtX
-# no4hMuI5B72nd3VcMA0GCSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAlVTMRUwEwYD
-# VQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAf
-# BgNVBAMTGERpZ2lDZXJ0IFRydXN0ZWQgUm9vdCBHNDAeFw0xMzA4MDExMjAwMDBa
-# Fw0zODAxMTUxMjAwMDBaMGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2Vy
-# dCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lD
-# ZXJ0IFRydXN0ZWQgUm9vdCBHNDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoC
-# ggIBAL/mkHNo3rvkXUo8MCIwaTPswqclLskhPfKK2FnC4SmnPVirdprNrnsbhA3E
-# MB/zG6Q4FutWxpdtHauyefLKEdLkX9YFPFIPUh/GnhWlfr6fqVcWWVVyr2iTcMKy
-# unWZanMylNEQRBAu34LzB4TmdDttceItDBvuINXJIB1jKS3O7F5OyJP4IWGbNOsF
-# xl7sWxq868nPzaw0QF+xembud8hIqGZXV59UWI4MK7dPpzDZVu7Ke13jrclPXuU1
-# 5zHL2pNe3I6PgNq2kZhAkHnDeMe2scS1ahg4AxCN2NQ3pC4FfYj1gj4QkXCrVYJB
-# MtfbBHMqbpEBfCFM1LyuGwN1XXhm2ToxRJozQL8I11pJpMLmqaBn3aQnvKFPObUR
-# WBf3JFxGj2T3wWmIdph2PVldQnaHiZdpekjw4KISG2aadMreSx7nDmOu5tTvkpI6
-# nj3cAORFJYm2mkQZK37AlLTSYW3rM9nF30sEAMx9HJXDj/chsrIRt7t/8tWMcCxB
-# YKqxYxhElRp2Yn72gLD76GSmM9GJB+G9t+ZDpBi4pncB4Q+UDCEdslQpJYls5Q5S
-# UUd0viastkF13nqsX40/ybzTQRESW+UQUOsxxcpyFiIJ33xMdT9j7CFfxCBRa2+x
-# q4aLT8LWRV+dIPyhHsXAj6KxfgommfXkaS+YHS312amyHeUbAgMBAAGjQjBAMA8G
-# A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBTs1+OC0nFd
-# ZEzfLmc/57qYrhwPTzANBgkqhkiG9w0BAQwFAAOCAgEAu2HZfalsvhfEkRvDoaIA
-# jeNkaA9Wz3eucPn9mkqZucl4XAwMX+TmFClWCzZJXURj4K2clhhmGyMNPXnpbWvW
-# VPjSPMFDQK4dUPVS/JA7u5iZaWvHwaeoaKQn3J35J64whbn2Z006Po9ZOSJTROvI
-# XQPK7VB6fWIhCoDIc2bRoAVgX+iltKevqPdtNZx8WorWojiZ83iL9E3SIAveBO6M
-# m0eBcg3AFDLvMFkuruBx8lbkapdvklBtlo1oepqyNhR6BvIkuQkRUNcIsbiJeoQj
-# YUIp5aPNoiBB19GcZNnqJqGLFNdMGbJQQXE9P01wI4YMStyB0swylIQNCAmXHE/A
-# 7msgdDDS4Dk0EIUhFQEI6FUy3nFJ2SgXUE3mvk3RdazQyvtBuEOlqtPDBURPLDab
-# 4vriRbgjU2wGb2dVf0a1TD9uKFp5JtKkqGKX0h7i7UqLvBv9R0oN32dmfrJbQdA7
-# 5PQ79ARj6e/CVABRoIoqyc54zNXqhwQYs86vSYiv85KZtrPmYQ/ShQDnUBrkG5Wd
-# GaG5nLGbsQAe79APT0JsyQq87kP6OnGlyE0mpTX9iV28hWIdMtKgK1TtmlfB2/oQ
-# zxm3i0objwG2J5VT6LaJbVu8aNQj6ItRolb58KaAoNYes7wPD1N1KarqE3fk3oyB
-# Ia0HEEcRrYc9B9F1vM/zZn4wggawMIIEmKADAgECAhAIrUCyYNKcTJ9ezam9k67Z
-# MA0GCSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2Vy
-# dCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lD
-# ZXJ0IFRydXN0ZWQgUm9vdCBHNDAeFw0yMTA0MjkwMDAwMDBaFw0zNjA0MjgyMzU5
-# NTlaMGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8G
-# A1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBT
-# SEEzODQgMjAyMSBDQTEwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDV
-# tC9C0CiteLdd1TlZG7GIQvUzjOs9gZdwxbvEhSYwn6SOaNhc9es0JAfhS0/TeEP0
-# F9ce2vnS1WcaUk8OoVf8iJnBkcyBAz5NcCRks43iCH00fUyAVxJrQ5qZ8sU7H/Lv
-# y0daE6ZMswEgJfMQ04uy+wjwiuCdCcBlp/qYgEk1hz1RGeiQIXhFLqGfLOEYwhrM
-# xe6TSXBCMo/7xuoc82VokaJNTIIRSFJo3hC9FFdd6BgTZcV/sk+FLEikVoQ11vku
-# nKoAFdE3/hoGlMJ8yOobMubKwvSnowMOdKWvObarYBLj6Na59zHh3K3kGKDYwSNH
-# R7OhD26jq22YBoMbt2pnLdK9RBqSEIGPsDsJ18ebMlrC/2pgVItJwZPt4bRc4G/r
-# JvmM1bL5OBDm6s6R9b7T+2+TYTRcvJNFKIM2KmYoX7BzzosmJQayg9Rc9hUZTO1i
-# 4F4z8ujo7AqnsAMrkbI2eb73rQgedaZlzLvjSFDzd5Ea/ttQokbIYViY9XwCFjyD
-# KK05huzUtw1T0PhH5nUwjewwk3YUpltLXXRhTT8SkXbev1jLchApQfDVxW0mdmgR
-# QRNYmtwmKwH0iU1Z23jPgUo+QEdfyYFQc4UQIyFZYIpkVMHMIRroOBl8ZhzNeDhF
-# MJlP/2NPTLuqDQhTQXxYPUez+rbsjDIJAsxsPAxWEQIDAQABo4IBWTCCAVUwEgYD
-# VR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUaDfg67Y7+F8Rhvv+YXsIiGX0TkIw
-# HwYDVR0jBBgwFoAU7NfjgtJxXWRM3y5nP+e6mK4cD08wDgYDVR0PAQH/BAQDAgGG
-# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMHcGCCsGAQUFBwEBBGswaTAkBggrBgEFBQcw
-# AYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEEGCCsGAQUFBzAChjVodHRwOi8v
-# Y2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkUm9vdEc0LmNydDBD
-# BgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNl
-# cnRUcnVzdGVkUm9vdEc0LmNybDAcBgNVHSAEFTATMAcGBWeBDAEDMAgGBmeBDAEE
-# ATANBgkqhkiG9w0BAQwFAAOCAgEAOiNEPY0Idu6PvDqZ01bgAhql+Eg08yy25nRm
-# 95RysQDKr2wwJxMSnpBEn0v9nqN8JtU3vDpdSG2V1T9J9Ce7FoFFUP2cvbaF4HZ+
-# N3HLIvdaqpDP9ZNq4+sg0dVQeYiaiorBtr2hSBh+3NiAGhEZGM1hmYFW9snjdufE
-# 5BtfQ/g+lP92OT2e1JnPSt0o618moZVYSNUa/tcnP/2Q0XaG3RywYFzzDaju4Imh
-# vTnhOE7abrs2nfvlIVNaw8rpavGiPttDuDPITzgUkpn13c5UbdldAhQfQDN8A+KV
-# ssIhdXNSy0bYxDQcoqVLjc1vdjcshT8azibpGL6QB7BDf5WIIIJw8MzK7/0pNVwf
-# iThV9zeKiwmhywvpMRr/LhlcOXHhvpynCgbWJme3kuZOX956rEnPLqR0kq3bPKSc
-# hh/jwVYbKyP/j7XqiHtwa+aguv06P0WmxOgWkVKLQcBIhEuWTatEQOON8BUozu3x
-# GFYHKi8QxAwIZDwzj64ojDzLj4gLDb879M4ee47vtevLt/B3E+bnKD+sEq6lLyJs
-# QfmCXBVmzGwOysWGw/YmMwwHS6DTBwJqakAwSEs0qFEgu60bhQjiWQ1tygVQK+pK
-# HJ6l/aCnHwZ05/LWUpD9r4VIIflXO7ScA+2GRfS0YW6/aOImYIbqyK+p/pQd52Mb
-# OoZWeE4wgge4MIIFoKADAgECAhAILtlw2MZ708ipFCjsiihmMA0GCSqGSIb3DQEB
-# CwUAMGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8G
-# A1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBT
-# SEEzODQgMjAyMSBDQTEwHhcNMjExMDI2MDAwMDAwWhcNMjQxMDI0MjM1OTU5WjCB
-# lTEdMBsGA1UEDwwUUHJpdmF0ZSBPcmdhbml6YXRpb24xEzARBgsrBgEEAYI3PAIB
-# AxMCREsxETAPBgNVBAUTCDQyMDc3ODM2MQswCQYDVQQGEwJESzEPMA0GA1UEBxMG
-# VmlieSBKMRYwFAYDVQQKEw1kb3RqZXNwZXIuY29tMRYwFAYDVQQDEw1kb3RqZXNw
-# ZXIuY29tMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAxyFHSy1G6vsn
-# 1oT5vB5kAqt8RaaF7TqO8gNYMpB0QpXDTleX6N/B61Byb/OOalDZ/K85t2dDaBJQ
-# Cyq4A6+/E+2Oo1XkhJ+ZDsQnhMgswQk810Rg8k4pVja4jyZF3mx+03tISyJ0ANAq
-# vN5I6lLW26FhqtaxyG9yVFGw+Q3uX9wkKQ4zrZoXNCLsJHtMkMIAO8g9Vgl3gedX
-# kkiwU37ompWmDaBlUoggIXobJE2A/knZ63MjG+aH6qbqgCUzrJhuF7NwEM/JAuz0
-# Me12IlSEkipdn5LRiDa+EStm5rPmni/FEX3ePfHvGaw32g7llvkucc2D29lo/uIE
-# Ih9BDhZWztyqZYvHK0n+ZZAu8QeAeghtrRdeIqB9n8Tsp/7Wd6NIFKMlbHZk7InN
-# DP8H0SzM8qZd4qfufqVPPx6wloNhkYCytp1JXMa2paHtmUIRFC+9kKqVnmfT1gNf
-# XUQl8rPGumU2ZTCtZzZwTd/vTbU3FrYFUORYJWKcvE6HwVIY4MYRTNQTqMZYb4i8
-# vn87FPOLk0wVKtyitiXMd7yjnfG7M69/szTefkPY8kV62RTcmXYToRc+EVdYFTCW
-# aIqW90ORSnPuITYRAR0SGB4tMqE5k8vJ8J7AYEv3Tk5bMBopxISte1DlfBMmYN6O
-# xHNEacx5SZknMBFysJb6Rf8x1gROJp8CAwEAAaOCAi0wggIpMB8GA1UdIwQYMBaA
-# FGg34Ou2O/hfEYb7/mF7CIhl9E5CMB0GA1UdDgQWBBQ0yIVU8lIB8XoQryBDhweA
-# 2U2+DDAmBgNVHREEHzAdoBsGCCsGAQUFBwgDoA8wDQwLREstNDIwNzc4MzYwDgYD
-# VR0PAQH/BAQDAgeAMBMGA1UdJQQMMAoGCCsGAQUFBwMDMIG1BgNVHR8Ega0wgaow
-# U6BRoE+GTWh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRydXN0ZWRH
-# NENvZGVTaWduaW5nUlNBNDA5NlNIQTM4NDIwMjFDQTEuY3JsMFOgUaBPhk1odHRw
-# Oi8vY3JsNC5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkRzRDb2RlU2lnbmlu
-# Z1JTQTQwOTZTSEEzODQyMDIxQ0ExLmNybDA9BgNVHSAENjA0MDIGBWeBDAEDMCkw
-# JwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzCBlAYIKwYB
-# BQUHAQEEgYcwgYQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNv
-# bTBcBggrBgEFBQcwAoZQaHR0cDovL2NhY2VydHMuZGlnaWNlcnQuY29tL0RpZ2lD
-# ZXJ0VHJ1c3RlZEc0Q29kZVNpZ25pbmdSU0E0MDk2U0hBMzg0MjAyMUNBMS5jcnQw
-# DAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsFAAOCAgEAEDNVCxePhpxpDHspit8j
-# rwvZb+PrJCb1wWjUTlOv1TFMfUAysUk7DiDAB7Z5XZTloY5p6RQwoymHE2Vtsy9x
-# jv4bIgGpQz3Savf7pW8wENyiL7GIkVfLIYjSxSoEbiHlnN/4gn2rWQ0STqtmuJVE
-# 3uk91HL2raJTRCJpCyUp2gw9BPQmUYYKLanebEOmK0zvW+3IQdWizVRuf9fqbyH8
-# nLZhVBSddVelokraexR8a2XWBgIjyrxfjXfo7S5gcNf6Bwmc9G5DOIvPhS7DXkGS
-# hzsEn3iP2H69m0T51iS4M7zXyiVtkj0pXMSaytgdedX1D/vI8FT8NHc3pTKQ/301
-# LUELbH4hOfA0+ynNg6Znx9MFMAYmx20d+VeFcdv3gI09KctMlzenwTqcoEs0OaAN
-# F3nX3CkJ3lbV+8FJrpRX8rcqxPcg4QewV/JRNsFZbO0FlM+QdHi+zz5ES40hfefE
-# L0LezG6KO5wWoP6aiogA7CL/Qz3UkLa9foS0cAa8kj09mC9RuwiRdJlfUvX4KwZz
-# FaHtrOZJaAUkqwUDQbEPZ3GTCuQt8lLBpNmOu+GKVTyui/lj8+LZmm0el1qMnyzz
-# Wa3yU+LbdVjo5p7AaoZtJrySzM4G73UblmY7c8/ark4g9hQa7QKsEF/lwAgJg68p
-# 4sDM7R4UrteLSrPvfanIQxIxggVSMIIFTgIBATB9MGkxCzAJBgNVBAYTAlVTMRcw
-# FQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3Rl
-# ZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEzODQgMjAyMSBDQTECEAgu2XDY
-# xnvTyKkUKOyKKGYwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwxCjAIoAKAAKEC
-# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEOMAwG
-# CisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFFYFJQEO5lSqlee5RoHHXOc55fTE
-# MA0GCSqGSIb3DQEBAQUABIICAGnJhgKzI9Cig8J1OrUnuGK+O6bHhKbPbvRq/bc2
-# 1mp0GH9NIYKUjfMKZGAxwWni/RMLyNu5bkhMfknxmnAC+DtXGX35ISvKD/vlmuzp
-# vlVcQNn2LtCwZ0Ab5NGOclX/NA4xLo9/nk8l0do6DhEHLLA15QkgMsqHABiOQ8zM
-# MN4hbx5JpxOu3+ybKScixfMBEH2lnJJ0Wlz1yxotSfr9VH0YXsNNG+i1HhMPkkwX
-# FPyv32OhKYvPBefIH/Wa5+IvOWtFazfr1/SilHJlzsj0D5LrTbFHgC2pjKLNAR5n
-# 84e8qoXNyfbwO3DNrPaqBkQnv6XD7f6yF4aSV2wVsNOfzd2dNDm3qgZ7NVeQa/WX
-# RLU+Jgw/cri9k6Ii9/r012EsETkX3nU0xYIAWNe5XgsZjOIzTPtKByqnKy8EtT2m
-# 5Zp4X8Cx1BQxxlgCz3JOfFgdgZVX8zsxS8+EHSb1mH9rbrvk4xSUNrbROStejBvO
-# 5cBNGRSsD5af+S4vku+qviPMlDWmNl+TCCYMUSRXKfR9+iInBxosj5ohD+OT6ova
-# 0yebUCm5FPkirXr/PisZ57fSgXV7I7OYckdA67LRlmdjyPOcYuNL0AHke+TkFOTo
-# GcBchbNtU1dFOq7LgapcMdO8E7l7XL0vRHIXt+Gg0PRg+JVWDijFwO0QBdnVX/iW
-# Em8ToYICMDCCAiwGCSqGSIb3DQEJBjGCAh0wggIZAgEBMIGGMHIxCzAJBgNVBAYT
-# AlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2Vy
-# dC5jb20xMTAvBgNVBAMTKERpZ2lDZXJ0IFNIQTIgQXNzdXJlZCBJRCBUaW1lc3Rh
-# bXBpbmcgQ0ECEA1CSuC+Ooj/YEAhzhQA8N0wDQYJYIZIAWUDBAIBBQCgaTAYBgkq
-# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yMjAzMTUwNzIx
-# NTNaMC8GCSqGSIb3DQEJBDEiBCAhixsYUqeY94ma1tIZVxohsA8AGwh734es6ENG
-# LeFUczANBgkqhkiG9w0BAQEFAASCAQBfj04GMMfrmkzzIg2cSs6yBPsgN2iDDDBN
-# a3Y464iA8j1zmQx5Pjs2il11ZARlciTelAofwCE0F4X1vVcHrvo9myjcKtjUeaid
-# 6U7rpG6ND8PX0zbIrlpTfu3mLNW4tYQ6En6beUQ2RqanbLo7YeTqRzIKnH0Q9cU+
-# KACuqt4g6NAiAn6zV1DNOYJTSuk9JlZ3KptS3IPYc/u/m1e+09aErn5TD2o1MWhB
-# Nsrogz7Ec+RphDsuNgbgjRm209uWBctvu541pu0XF1E6pBRthwkx18/hwsN9tVhu
-# oIDGJX2VSBKMoQRh+zs/N83QUnqNZipLuIrzMfs6hl0ifLXM1Y/l
-# SIG # End signature block
