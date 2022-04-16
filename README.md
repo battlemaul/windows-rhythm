@@ -1,6 +1,6 @@
 ---
 Title: README
-Date: April 8, 2022
+Date: April 14, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -48,7 +48,7 @@ The mindset of the solution will aim to allow to limit and/or combine the functi
 ## Current features
 
 - WindowsApps: Remove Windows In-box Apps and Store Apps.
-- WindowsExecutables: Download and/or run executables.
+- WindowsExecutables: Download and/or run executables. <span style="color: red;">**NEW**</span>
 - WindowsFeatures: Enabling and disabling Windows features.
 - WindowsOptionalFeature: Enabling and disabling Windows optional features.
 - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
