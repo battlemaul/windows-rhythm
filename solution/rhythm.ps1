@@ -492,9 +492,19 @@ process {
             fLogContent -fLogContent "Processing $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
             fLogContent -fLogContent "$($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
             #region :: Expanding Windows Environment Variables
-            fLogContent -fLogContent "Windows Environment Variables resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
-            $filePath = $($ExecutionContext.InvokeCommand.ExpandString($windowsExecutable.filePath))
-            fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
+            if ($($windowsExecutable.filePath) -match "%\S+%") {
+                #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
+                if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
+                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
+                    $filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
+                    fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
+                }
+                else {
+                    fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
+                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath) terminated." -fLogContentComponent "windowsExecutables"
+                    Continue
+                }
+            }
             #endregion
             #region :: download item
             if ($($windowsExecutable.downloadUri)) {
@@ -830,7 +840,5 @@ end {
     #region :: cleaning-up
     fLogContent -fLogContent "Finishing up" -fLogContentComponent "clean-up"
     fLogContent -fLogContent "Cleaning up environment" -fLogContentComponent "clean-up"
-    #Remove-Variable -Name * -ErrorAction "SilentlyContinue"
-    #$error.Clear()
     #endregion
 }
