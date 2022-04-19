@@ -1,0 +1,37 @@
+{
+    "metadata": {
+        "enabled": false,
+        "installBehavior": "SYSTEM",
+        "guid": "{B11B9F3A-5FB1-4105-A0DB-4C6CAE86AF4D}",
+        "title": "Windows rhythm-DSC-SYSTEM-Preview",
+        "description": "Windows desired state configuration - windows executables preview",
+        "url": "",
+        "version": "0.8.2.4",
+        "date": "2022-05-15",
+        "publisher": "dotjesper.com",
+        "developer": "Jesper Nielsen"
+    },
+    "runConditions": {
+        "runScriptIn64bitPowerShell": true,
+        "requireReboot": false
+    },
+    "windowsExecutables": {
+        "enabled": true,
+        "items": [
+            {
+                "name": "Microsoft OneDrive",
+                "description": "Download and install OneDriveSetup.exe for all users",
+                "downloadUri": "https://go.microsoft.com/fwlink/p/?LinkID=2182910",
+                "filePath": "${Env:TEMP}\\OneDriveSetup.exe",
+                "ArgumentList": "/allusers /silent"
+            },
+            {
+                "name": "Microsoft Edge",
+                "description": "Update Microsoft Edge",
+                "downloadUri": "",
+                "filePath": "${Env:ProgramFiles(x86)}\\Microsoft\\EdgeUpdate\\MicrosoftEdgeUpdate.exe",
+                "ArgumentList": "/install appguid={56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}&appname=Microsoft%20Edge&needsadmin=True /silent"
+            }
+        ]
+    }
+}

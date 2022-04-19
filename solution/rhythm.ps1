@@ -489,22 +489,12 @@ process {
         fLogContent -fLogContent "Windows Executables is enabled." -fLogContentComponent "windowsExecutables"
         [array]$windowsExecutables = $($config.windowsExecutables.items)
         foreach ($windowsExecutable in $windowsExecutables) {
-            fLogContent -fLogContent "Name $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
-            fLogContent -fLogContent "Description $($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
-            #region :: validate Windows Environment Variables 
-            if ($($windowsExecutable.filePath) -match "%\S+%") {
-                #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
-                if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
-                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
-                    $filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
-                    fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
-                }
-                else {
-                    fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
-                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath) terminated." -fLogContentComponent "windowsExecutables"
-                    Continue
-                }
-            }
+            fLogContent -fLogContent "Processing $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
+            fLogContent -fLogContent "$($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
+            #region :: Expanding Windows Environment Variables
+            fLogContent -fLogContent "Windows Environment Variables resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
+            $filePath = $($ExecutionContext.InvokeCommand.ExpandString($windowsExecutable.filePath))
+            fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
             #endregion
             #region :: download item
             if ($($windowsExecutable.downloadUri)) {
