@@ -1,6 +1,6 @@
 ---
 Title: README
-Date: April 14, 2022
+Date: April 21, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -41,14 +41,14 @@ Windows rhythm was built to remove a few Windows features from Windows devices, 
 
 Further improvements were added, baseline conditions were requested, and Windows Service configuration and Windows Registry configuration options has been included.
 
-There as several ways to achieve a Windows desired state configuration baseline and several approaches. Windows rhythm is built upon the requirement to provide a default configuration baseline, ot a desired state configuration, and is not meant to stop the end user to install a previously removed app, or circumvent a desired setting, purely to allow device administrators to provide a default baseline, or corporate baseline, to the end user as part of a Windows Autopilot scenario.
+There as several ways to achieve a Windows desired state configuration baseline and several approaches. Windows rhythm is built upon the requirement to provide a default configuration baseline, or a desired state configuration, and is not meant to stop the end user to install a previously removed app, or circumvent a desired setting, purely to allow device administrators to provide a default baseline, or corporate baseline, to the end user as part of a Windows Autopilot scenario.
 
 The mindset of the solution will aim to allow to limit and/or combine the functionalities best suited for the task, meaning if Windows feature configuration were to be applied, this should be achievable without the Windows Registry configuration. Also, very important, is to be able to apply Windows baselines configuration in one or multiple packages in either system or user context, without changing the code – which is why all configurations is achievable using configuration files (json). This will help ensure minimal effort to create a new Windows desired state configuration, being easily completed without any code changes or re-signing the provided code.
 
 ## Current features
 
 - WindowsApps: Remove Windows In-box Apps and Store Apps.
-- WindowsExecutables: Download and/or run executables. <span style="color: red;">**NEW**</span>
+- WindowsExecutables: Download and/or run executables. **NEW**
 - WindowsFeatures: Enabling and disabling Windows features.
 - WindowsOptionalFeature: Enabling and disabling Windows optional features.
 - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
@@ -141,6 +141,8 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.8.6 | April 21. 2022*
 
 *Version 0.9.8.5 | April 16. 2022*
 

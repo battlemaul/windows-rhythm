@@ -6,8 +6,8 @@
         "title": "Windows rhythm-DSC-USER",
         "description": "Windows desired state configuration",
         "url": "",
-        "version": "1.4.0.1",
-        "date": "2022-04-16",
+        "version": "1.4.0.2",
+        "date": "2022-04-21",
         "publisher": "dotjesper.com",
         "developer": "Jesper Nielsen"
     },
@@ -127,6 +127,17 @@
                 "Name": "{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
                 "Type": "DWORD",
                 "Value": "0"
+            },
+            {
+                "description": "Turn on Location Services",
+                "minOSbuild": "",
+                "maxOSbuild": "",
+                "item": "add",
+                "root": "HKCU",
+                "Path": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location",
+                "Name": "Value",
+                "Type": "String",
+                "Value": "Allow"
             }
         ]
     }

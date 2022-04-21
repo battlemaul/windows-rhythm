@@ -1,5 +1,5 @@
 ﻿<# PSScriptInfo
-.VERSION 0.9.8.5
+.VERSION 0.9.8.6
 .GUID A86971BB-9C5B-4540-B5C7-13CCDDE330EB
 .AUTHOR @dotjesper
 .COMPANYNAME dotjesper.com
@@ -249,7 +249,7 @@ begin {
                     }
                     "HKLM" {
                         fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
-                        New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_LOCAL_MACHINE" -Scope "Script" -Verbose:$false | Out-Null
+                        New-PSDrive -Name "HKLM" -PSProvider "Registry" -Root "HKEY_LOCAL_MACHINE" -Scope "Script" -Verbose:$false | Out-Null
                     }
                     Default {
                         fLogContent -fLogContent "registry PSDrive $($froot) has an unknown or unsupported value, exiting." -fLogContentComponent "fRegistryItem"
