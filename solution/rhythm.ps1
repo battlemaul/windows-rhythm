@@ -1,5 +1,5 @@
 ﻿<# PSScriptInfo
-.VERSION 0.9.8.2
+.VERSION 0.9.8.5
 .GUID A86971BB-9C5B-4540-B5C7-13CCDDE330EB
 .AUTHOR @dotjesper
 .COMPANYNAME dotjesper.com
@@ -8,9 +8,8 @@
 .LICENSEURI https://github.com/dotjesper/windows-rhythm/blob/main/LICENSE
 .PROJECTURI https://github.com/dotjesper/windows-rhythm
 .ICONURI
-.EXTERNALMODULEDEPENDENCIES
-.REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
+.REQUIREDSCRIPTS
 .RELEASENOTES https://github.com/dotjesper/windows-rhythm/wiki/release-notes
 #>
 <#
@@ -20,11 +19,12 @@
     The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
     Windows rhythm can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
     Current features:
-    - Enabling and disabling Windows features.
-    - Enabling and disabling Windows optional features.
-    - Remove Windows In-box Apps and Store Apps.
-    - Configure/re-configure Windows Services.
-    - Modifying Windows registry entries (add, change and remove).
+    - WindowsApps: Remove Windows In-box Apps and Store Apps.
+    - WindowsExecutables: Download and/or run executables.
+    - WindowsFeatures: Enabling and disabling Windows features.
+    - WindowsOptionalFeature: Enabling and disabling Windows optional features.
+    - "indowsRegistry: Modifying Windows registry entries (add, change and remove).
+    - WindowsServices: Configure/re-configure Windows Services.
     To download sample configuration files and follow the latest progress, visit the project site.
 .PARAMETER configFile
     Start script with the defined configuration file to be used for the task.
@@ -48,7 +48,7 @@
 param (
     #variables
     [Parameter(Mandatory = $false)]
-    [ValidateScript({Test-Path $_ })]
+    [ValidateScript({ Test-Path $_ })]
     [string]$configFile = ".\config.json",
     [Parameter(Mandatory = $false)]
     [string]$logFile = "",
@@ -241,11 +241,11 @@ begin {
                 switch ("$froot") {
                     "HKCR" {
                         fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
-                        New-PSDrive -Name "HKCR" -PSProvider "Registry" -Root "HKEY_CLASSES_ROOT" -Scope "Script" -Verbose:$false| Out-Null
+                        New-PSDrive -Name "HKCR" -PSProvider "Registry" -Root "HKEY_CLASSES_ROOT" -Scope "Script" -Verbose:$false | Out-Null
                     }
                     "HKCU" {
                         fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
-                        New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_CURRENT_USER" -Scope "Script" -Verbose:$false| Out-Null
+                        New-PSDrive -Name "HKCU" -PSProvider "Registry" -Root "HKEY_CURRENT_USER" -Scope "Script" -Verbose:$false | Out-Null
                     }
                     "HKLM" {
                         fLogContent -fLogContent "registry PSDrive $($froot) not found, creating PSDrive." -fLogContentComponent "fRegistryItem"
@@ -483,6 +483,78 @@ process {
     }
     #endregion
     #
+    #region :: windowsExecutables
+    fLogContent -fLogContent "WINDOWS EXECUTABLES" -fLogContentComponent "windowsExecutables"
+    if ($($config.windowsExecutables.enabled) -eq $true) {
+        fLogContent -fLogContent "Windows Executables is enabled." -fLogContentComponent "windowsExecutables"
+        [array]$windowsExecutables = $($config.windowsExecutables.items)
+        foreach ($windowsExecutable in $windowsExecutables) {
+            fLogContent -fLogContent "Processing $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
+            fLogContent -fLogContent "$($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
+            #region :: Expanding Windows Environment Variables
+            if ($($windowsExecutable.filePath) -match "%\S+%") {
+                #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
+                if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
+                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
+                    $filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
+                    fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
+                }
+                else {
+                    fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
+                    fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath) terminated." -fLogContentComponent "windowsExecutables"
+                    Continue
+                }
+            }
+            #endregion
+            #region :: download item
+            if ($($windowsExecutable.downloadUri)) {
+                fLogContent -fLogContent "Download Uri $($windowsExecutable.downloadUri)" -fLogContentComponent "windowsExecutables"
+                try {
+                    Invoke-WebRequest -Uri $($windowsExecutable.downloadUri) -OutFile $($filePath)
+                }
+                catch {
+                    $errMsg = $_.Exception.Message
+                    fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsExecutables"
+                    if ($exitOnError) {
+                        exit 1
+                    }
+                }
+                finally {}
+            }
+            #endregion
+            #region :: executing item
+            if (Test-Path $filePath) {
+                fLogContent -fLogContent "File path $($filePath) exists." -fLogContentComponent "windowsExecutables"
+                try {
+                    if ($($windowsExecutable.ArgumentList)) {
+                        fLogContent -fLogContent "Executing $filePath with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
+                        Start-Process -FilePath $filePath -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
+
+                    }
+                    else {
+                        fLogContent -fLogContent "Executing $filePath with no arguments." -fLogContentComponent "windowsExecutables"
+                        Start-Process -FilePath $filePath -NoNewWindow -Wait
+                    }
+                }
+                catch {
+                    $errMsg = $_.Exception.Message
+                    fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsExecutables"
+                    if ($exitOnError) {
+                        exit 1
+                    }
+                }
+                finally {}
+            }
+            else {
+                fLogContent -fLogContent "File not found [$filePath]" -fLogContentComponent "windowsExecutables"
+            }
+            #endregion
+        }
+    }
+    else {
+        fLogContent -fLogContent "Windows Executables is disabled." -fLogContentComponent "windowsExecutables"
+    }
+    #endregion
     #region :: windowsFeatures
     fLogContent -fLogContent "WINDOWS FEATURES" -fLogContentComponent "windowsFeatures"
     if ($($config.windowsFeatures.enabled) -eq $true) {
@@ -684,7 +756,7 @@ process {
                 [array]$windowsServiceStatus = Get-Service -Name "$($windowsService.Name)" -ErrorAction "SilentlyContinue"
                 if ($windowsServiceStatus) {
                     fLogContent -fLogContent "$($windowsServiceStatus.DisplayName) found! | Status: $($windowsServiceStatus.Status) | StartType: $($windowsServiceStatus.StartType)." -fLogContentComponent "windowsServices"
-                    if ($($windowsService.StartType) -eq  $($windowsServiceStatus.StartType)) {
+                    if ($($windowsService.StartType) -eq $($windowsServiceStatus.StartType)) {
                         fLogContent -fLogContent "$($windowsService.Name) already configured." -fLogContentComponent "windowsServices"
                     }
                     else {
@@ -768,7 +840,5 @@ end {
     #region :: cleaning-up
     fLogContent -fLogContent "Finishing up" -fLogContentComponent "clean-up"
     fLogContent -fLogContent "Cleaning up environment" -fLogContentComponent "clean-up"
-    Remove-Variable -Name * -ErrorAction "SilentlyContinue"
-    #$error.Clear()
     #endregion
 }

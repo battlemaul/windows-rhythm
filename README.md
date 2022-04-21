@@ -1,6 +1,6 @@
 ---
 Title: README
-Date: April 8, 2022
+Date: April 14, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -31,7 +31,7 @@ This is a personal development, please respect the community sharing philosophy 
 
 ## Goal
 
-The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
+The goal of Windows rhythm is to provide a consistent desired state configuration to end user devices in Windows Autopilot scenarios.
 
 Windows rhythm can easily be implemented using more traditionally deployment methods, e.g., Operating System Deployment (OSD), Task Sequences deployment or similar methods utilized.
 
@@ -41,23 +41,24 @@ Windows rhythm was built to remove a few Windows features from Windows devices, 
 
 Further improvements were added, baseline conditions were requested, and Windows Service configuration and Windows Registry configuration options has been included.
 
-There as several ways to achieve a Windows configuration baseline and several approaches. Windows rhythm is built upon the requirement to provide a default configuration baseline and is not meant to stop the end user to install a previously removed app, or circumvent a desired setting, purely to allow device administrators to provide a default baseline, or corporate baseline, to the end user as part of a Windows Autopilot scenario.
+There as several ways to achieve a Windows desired state configuration baseline and several approaches. Windows rhythm is built upon the requirement to provide a default configuration baseline, ot a desired state configuration, and is not meant to stop the end user to install a previously removed app, or circumvent a desired setting, purely to allow device administrators to provide a default baseline, or corporate baseline, to the end user as part of a Windows Autopilot scenario.
 
-The mindset of the solution will aim to allow to limit and/or combine the functionalities best suited for the task, meaning if Windows feature configuration were to be applied, this should be achievable without the Windows Registry configuration. Also, very important, is to be able to apply Windows baselines configuration in one or multiple packages in either system or user context, without changing the code – which is why all configurations is achievable using configuration files (json). This will help ensure minimal effort to create a new Windows baselines configuration, being easily completed without any code changes or re-signing the provided code.
+The mindset of the solution will aim to allow to limit and/or combine the functionalities best suited for the task, meaning if Windows feature configuration were to be applied, this should be achievable without the Windows Registry configuration. Also, very important, is to be able to apply Windows baselines configuration in one or multiple packages in either system or user context, without changing the code – which is why all configurations is achievable using configuration files (json). This will help ensure minimal effort to create a new Windows desired state configuration, being easily completed without any code changes or re-signing the provided code.
 
 ## Current features
 
-- Enabling and disabling Windows features.
-- Enabling and disabling Windows Optional features
-- Remove Windows In-box Apps and Store Apps.
-- Configure/re-configure Windows Services.
-- Modifying Windows registry entries (add, modify and remove).
+- WindowsApps: Remove Windows In-box Apps and Store Apps.
+- WindowsExecutables: Download and/or run executables. <span style="color: red;">**NEW**</span>
+- WindowsFeatures: Enabling and disabling Windows features.
+- WindowsOptionalFeature: Enabling and disabling Windows optional features.
+- WindowsRegistry: Modifying Windows registry entries (add, change and remove).
+- WindowsServices: Configure/re-configure Windows Services.
 
 ## Requirements
 
 Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64-bit and newer and require PowerShell 5.1.
 
-**NOTE** Applying required device Baseline configuration, **Windows rhythm** should be configured to run in either SYSTEM or USER context. Applying device Baseline in SYSTEM context, will be required to run with local administrative rights (Local administrator or System). Combining device Baseline across SYSTEM and USER is highly unadvisable and can cause undesired results.
+**NOTE** Applying Windows desired state configurationn, **Windows rhythm** should be configured to run in either SYSTEM or USER context. Applying device Baseline in SYSTEM context, will be required to run with local administrative rights (Local administrator or System). Combining device Baseline across SYSTEM and USER is highly unadvisable and can cause undesired results.
 
 ## Repository content
 
@@ -79,7 +80,7 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 
 ## Usage
 
-**Windows rhythm** require a configuration in file to work. The configuration file should be a valid json file, and the encoding should be UTF-8. The benefit using external configuration files, makes the solution more versatile and you can code sign the script once, and reuse the script for multiply deployment/tasks.
+**Windows rhythm** require a configuration file to work. The configuration file should be a valid json file, and the encoding should be UTF-8. The benefit using external configuration files, makes the solution more versatile and you can code sign the script once, and reuse the script for multiply deployment/tasks.
 
 > I highly recommend code signing any script used in a deployment scenario. If you are unable to sign the script yourself, feel free to download a signed version from the [releases](https://github.com/dotjesper/windows-rhythm/releases/).
 
@@ -140,6 +141,8 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.8.5 | April 16. 2022*
 
 *Version 0.9.8.2 | April 8. 2022*
 

@@ -6,8 +6,8 @@
         "title": "Windows rhythm-DSC-USER",
         "description": "Windows desired state configuration",
         "url": "",
-        "version": "1.3.2.1",
-        "date": "2022-03-28",
+        "version": "1.4.0.1",
+        "date": "2022-04-16",
         "publisher": "dotjesper.com",
         "developer": "Jesper Nielsen"
     },
