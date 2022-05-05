@@ -17,7 +17,8 @@
     },
     "windowsOptionalFeatures": {
         "enabled": false,
-        "features": [
+        "features": [],
+        "optionalFeatures": [
             {
                 "Name": "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0",
                 "DisplayName": "RSAT: Active Directory Domain Services and Lightweight Directory Services Tools",

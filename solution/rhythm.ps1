@@ -4,7 +4,7 @@
 .AUTHOR @dotjesper
 .COMPANYNAME dotjesper.com
 .COPYRIGHT dotjesper.com
-.TAGS windows powershell-5 windows-10 windows-11 endpoint-manager branding
+.TAGS windows powershell-5 windows-10 windows-11 endpoint-manager branding DSC
 .LICENSEURI https://github.com/dotjesper/windows-rhythm/blob/main/LICENSE
 .PROJECTURI https://github.com/dotjesper/windows-rhythm
 .ICONURI
@@ -14,16 +14,18 @@
 #>
 <#
 .SYNOPSIS
-    Windows rhythm device baseline configurator.
+    Windows rhythm device baseline configurator (Windows Desired State Configuration).
 .DESCRIPTION
     The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
     Windows rhythm can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
     Current features:
     - WindowsApps: Remove Windows In-box Apps and Store Apps.
     - WindowsExecutables: Download and/or run executables.
-    - WindowsFeatures: Enabling and disabling Windows features.
-    - WindowsOptionalFeature: Enabling and disabling Windows optional features.
-    - "indowsRegistry: Modifying Windows registry entries (add, change and remove).
+    - WindowsFeatures
+        - Enable and/or disable Windows features.
+        - Enable and/or disable Windows optional features.
+    - WindowsFiles: Copy file(s) to device from payload package.
+    - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
     - WindowsServices: Configure/re-configure Windows Services.
     To download sample configuration files and follow the latest progress, visit the project site.
 .PARAMETER configFile
@@ -496,8 +498,8 @@ process {
                 #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
                 if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
                     fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
-                    $filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
-                    fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
+                    $windowsExecutable.filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
+                    fLogContent -fLogContent "Windows Environment Variables resolved to $windowsExecutable.filePath." -fLogContentComponent "windowsExecutables"
                 }
                 else {
                     fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
@@ -510,7 +512,7 @@ process {
             if ($($windowsExecutable.downloadUri)) {
                 fLogContent -fLogContent "Download Uri $($windowsExecutable.downloadUri)" -fLogContentComponent "windowsExecutables"
                 try {
-                    Invoke-WebRequest -Uri $($windowsExecutable.downloadUri) -OutFile $($filePath)
+                    Invoke-WebRequest -Uri $($windowsExecutable.downloadUri) -OutFile $($windowsExecutable.filePath)
                 }
                 catch {
                     $errMsg = $_.Exception.Message
@@ -524,15 +526,15 @@ process {
             #endregion
             #region :: executing item
             if (Test-Path $filePath) {
-                fLogContent -fLogContent "File path $($filePath) exists." -fLogContentComponent "windowsExecutables"
+                fLogContent -fLogContent "File path $($windowsExecutable.filePath) exists." -fLogContentComponent "windowsExecutables"
                 try {
                     if ($($windowsExecutable.ArgumentList)) {
-                        fLogContent -fLogContent "Executing $filePath with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
+                        fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
                         Start-Process -FilePath $filePath -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
 
                     }
                     else {
-                        fLogContent -fLogContent "Executing $filePath with no arguments." -fLogContentComponent "windowsExecutables"
+                        fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with no arguments." -fLogContentComponent "windowsExecutables"
                         Start-Process -FilePath $filePath -NoNewWindow -Wait
                     }
                 }
@@ -546,13 +548,132 @@ process {
                 finally {}
             }
             else {
-                fLogContent -fLogContent "File not found [$filePath]" -fLogContentComponent "windowsExecutables"
+                fLogContent -fLogContent "File not found [$($windowsExecutable.filePath)]" -fLogContentComponent "windowsExecutables"
             }
             #endregion
         }
     }
     else {
         fLogContent -fLogContent "Windows Executables is disabled." -fLogContentComponent "windowsExecutables"
+    }
+    #endregion
+    #
+    #region :: windowsFeatures
+    fLogContent -fLogContent "WINDOWS FEATURES" -fLogContentComponent "windowsFeatures"
+    if ($($config.windowsFeatures.enabled) -eq $true) {
+        fLogContent -fLogContent "Windows Features is enabled." -fLogContentComponent "windowsFeatures"
+        #region :: windowsFeatures
+        [array]$windowsFeatures = $($config.windowsFeatures.features)
+        foreach ($windowsFeature in $windowsFeatures) {
+            fLogContent -fLogContent "Processing $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+            try {
+                [string]$featureState = $(Get-WindowsOptionalFeature -Online -FeatureName $($windowsFeature.FeatureName) -Verbose:$false).state
+            }
+            catch {
+                $errMsg = $_.Exception.Message
+                fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
+                if ($exitOnError) {
+                    exit 1
+                }
+            }
+            finally {}
+            if ($($windowsFeature.State) -eq $featureState) {
+                fLogContent -fLogContent "$($windowsFeature.DisplayName) configured [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
+            }
+            else {
+                fLogContent -fLogContent "configuring $($windowsFeature.DisplayName) [$($windowsFeature.State)]" -fLogContentComponent "windowsFeatures"
+                try {
+                    switch ($($windowsFeature.State).ToUpper()) {
+                        "ENABLED" {
+                            fLogContent -fLogContent "enabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+                            $windowsFeatureResult = Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -NoRestart -Verbose:$false | Out-Null
+                            if ($windowsFeatureResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished enabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
+                        }
+                        "DISABLED" {
+                            fLogContent -fLogContent "disabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
+                            $windowsFeatureResult = Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -NoRestart -Verbose:$false
+                            if ($windowsFeatureResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished disabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
+                        }
+                        Default {
+                            fLogContent -fLogContent "unsupported state $($windowsFeature.DisplayName) [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
+                        }
+                    }
+                }
+                catch {
+                    $errMsg = $_.Exception.Message
+                    fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
+                    if ($exitOnError) {
+                        exit 1
+                    }
+                }
+                finally {}
+            }
+        }
+        #endregion
+        #region :: windowsOptionalFeatures
+        fLogContent -fLogContent "WINDOWS OPTIONAL FEATURES" -fLogContentComponent "windowsOptionalFeatures"
+        [array]$windowsOptionalFeatures = $($config.windowsFeatures.optionalFeatures)
+        foreach ($windowsOptionalFeature in $windowsOptionalFeatures) {
+            fLogContent -fLogContent "Processing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+            [string]$featureState = $(Get-WindowsCapability -Online -Name $($windowsOptionalFeature.Name) -Verbose:$false).state
+            if ($($windowsOptionalFeature.State) -eq $featureState) {
+                fLogContent -fLogContent "$($windowsOptionalFeature.DisplayName) configured [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
+            }
+            else {
+                fLogContent -fLogContent "configuring $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]" -fLogContentComponent "windowsOptionalFeatures"
+                switch ($($windowsOptionalFeature.State).ToUpper()) {
+                    "INSTALLED" {
+                        fLogContent -fLogContent "installing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+                        try {
+                            $windowsCapabilityResult = Add-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
+                            if ($windowsCapabilityResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished installing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
+                        }
+                        catch {
+                            $errMsg = $_.Exception.Message
+                            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
+                            if ($exitOnError) {
+                                exit 1
+                            }
+                        }
+                        finally {}
+                    }
+                    "NOTPRESENT" {
+                        fLogContent -fLogContent "removing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
+                        try {
+                            $windowsCapabilityResult = Remove-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
+                            if ($windowsCapabilityResult.RestartNeeded) {
+                                $requireReboot = $true
+                            }
+                            fLogContent -fLogContent "finished removing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
+                        }
+                        catch {
+                            $errMsg = $_.Exception.Message
+                            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
+                            if ($exitOnError) {
+                                exit 1
+                            }
+                        }
+                        finally {}
+                    }
+                    Default {
+                        fLogContent -fLogContent "unsupported state $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
+                    }
+                }
+            }
+        }
+        #endregion
+    }
+    else {
+        fLogContent -fLogContent "Windows Features is disabled." -fLogContentComponent "windowsFeatures"
     }
     #endregion
     #
@@ -644,140 +765,6 @@ process {
     }
     else {
         fLogContent -fLogContent "Windows Files is disabled." -fLogContentComponent "windowsFiles"
-    }
-    #endregion
-    #
-    #region :: windowsFeatures
-    fLogContent -fLogContent "WINDOWS FEATURES" -fLogContentComponent "windowsFeatures"
-    if ($($config.windowsFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Windows Features is enabled." -fLogContentComponent "windowsFeatures"
-        [array]$windowsFeatures = $($config.windowsFeatures.features)
-        foreach ($windowsFeature in $windowsFeatures) {
-            fLogContent -fLogContent "Processing $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
-            try {
-                [string]$featureState = $(Get-WindowsOptionalFeature -Online -FeatureName $($windowsFeature.FeatureName) -Verbose:$false).state
-            }
-            catch {
-                $errMsg = $_.Exception.Message
-                fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
-                if ($exitOnError) {
-                    exit 1
-                }
-            }
-            finally {}
-            if ($($windowsFeature.State) -eq $featureState) {
-                fLogContent -fLogContent "$($windowsFeature.DisplayName) configured [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
-            }
-            else {
-                fLogContent -fLogContent "configuring $($windowsFeature.DisplayName) [$($windowsFeature.State)]" -fLogContentComponent "windowsFeatures"
-                try {
-                    switch ($($windowsFeature.State).ToUpper()) {
-                        "ENABLED" {
-                            fLogContent -fLogContent "enabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
-                            $windowsFeatureResult = Enable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -All -NoRestart -Verbose:$false | Out-Null
-                            if ($windowsFeatureResult.RestartNeeded) {
-                                $requireReboot = $true
-                            }
-                            fLogContent -fLogContent "finished enabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
-                        }
-                        "DISABLED" {
-                            fLogContent -fLogContent "disabling $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
-                            $windowsFeatureResult = Disable-WindowsOptionalFeature -Online -FeatureName "$($windowsFeature.FeatureName)" -NoRestart -Verbose:$false
-                            if ($windowsFeatureResult.RestartNeeded) {
-                                $requireReboot = $true
-                            }
-                            fLogContent -fLogContent "finished disabling $($windowsFeature.DisplayName). Restart needed: $($windowsFeatureResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
-                        }
-                        Default {
-                            fLogContent -fLogContent "unsupported state $($windowsFeature.DisplayName) [$($windowsFeature.State)]." -fLogContentComponent "windowsFeatures"
-                        }
-                    }
-                }
-                catch {
-                    $errMsg = $_.Exception.Message
-                    fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFeatures"
-                    if ($exitOnError) {
-                        exit 1
-                    }
-                }
-                finally {}
-            }
-        }
-    }
-    else {
-        fLogContent -fLogContent "Windows Features is disabled." -fLogContentComponent "windowsFeatures"
-    }
-    #endregion
-    #
-    #region :: windowsOptionalFeatures
-    fLogContent -fLogContent "WINDOWS OPTIONAL FEATURES" -fLogContentComponent "windowsOptionalFeatures"
-    if ($($config.windowsOptionalFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Windows Optional Features is enabled." -fLogContentComponent "windowsOptionalFeatures"
-        try {
-            [array]$windowsOptionalFeatures = $($config.windowsOptionalFeatures.features)
-        }
-        catch {
-            $errMsg = $_.Exception.Message
-            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
-            if ($exitOnError) {
-                exit 1
-            }
-        }
-        finally {}
-        foreach ($windowsOptionalFeature in $windowsOptionalFeatures) {
-            fLogContent -fLogContent "Processing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
-            [string]$featureState = $(Get-WindowsCapability -Online -Name $($windowsOptionalFeature.Name) -Verbose:$false).state
-            if ($($windowsOptionalFeature.State) -eq $featureState) {
-                fLogContent -fLogContent "$($windowsOptionalFeature.DisplayName) configured [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
-            }
-            else {
-                fLogContent -fLogContent "configuring $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]" -fLogContentComponent "windowsOptionalFeatures"
-                switch ($($windowsOptionalFeature.State).ToUpper()) {
-                    "INSTALLED" {
-                        fLogContent -fLogContent "installing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
-                        try {
-                            $windowsCapabilityResult = Add-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
-                            if ($windowsCapabilityResult.RestartNeeded) {
-                                $requireReboot = $true
-                            }
-                            fLogContent -fLogContent "finished installing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
-                        }
-                        catch {
-                            $errMsg = $_.Exception.Message
-                            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
-                            if ($exitOnError) {
-                                exit 1
-                            }
-                        }
-                        finally {}
-                    }
-                    "NOTPRESENT" {
-                        fLogContent -fLogContent "removing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
-                        try {
-                            $windowsCapabilityResult = Remove-WindowsCapability -Online -Name "$($windowsOptionalFeature.Name)" -Verbose:$false
-                            if ($windowsCapabilityResult.RestartNeeded) {
-                                $requireReboot = $true
-                            }
-                            fLogContent -fLogContent "finished removing $($windowsOptionalFeature.DisplayName), restart needed: $($windowsCapabilityResult.RestartNeeded)" -fLogContentComponent "windowsFeatures"
-                        }
-                        catch {
-                            $errMsg = $_.Exception.Message
-                            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
-                            if ($exitOnError) {
-                                exit 1
-                            }
-                        }
-                        finally {}
-                    }
-                    Default {
-                        fLogContent -fLogContent "unsupported state $($windowsOptionalFeature.DisplayName) [$($windowsOptionalFeature.State)]." -fLogContentComponent "windowsOptionalFeatures"
-                    }
-                }
-            }
-        }
-    }
-    else {
-        fLogContent -fLogContent "Windows Optional Features is disabled." -fLogContentComponent "windowsOptionalFeatures"
     }
     #endregion
     #

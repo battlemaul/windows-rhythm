@@ -18,6 +18,7 @@
     "windowsFiles": {
         "enabled": true,
         "assetFile": "assets.zip",
+        "assetFolder": "",
         "items": [
             {
                 "name": "Windows Start Menu Layout Modification",
