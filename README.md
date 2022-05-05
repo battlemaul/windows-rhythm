@@ -1,6 +1,6 @@
 ---
 Title: README
-Date: April 21, 2022
+Date: May 5, 2022
 Author: dotjesper
 Status: In development
 ---
@@ -48,9 +48,11 @@ The mindset of the solution will aim to allow to limit and/or combine the functi
 ## Current features
 
 - WindowsApps: Remove Windows In-box Apps and Store Apps.
-- WindowsExecutables: Download and/or run executables. **NEW**
-- WindowsFeatures: Enabling and disabling Windows features.
-- WindowsOptionalFeature: Enabling and disabling Windows optional features.
+- WindowsExecutables: Download and/or run executables.
+- WindowsFeatures
+    - Enable and/or disable Windows features.
+    - Enable and/or disable Windows optional features.
+- WindowsFiles: Copy file(s) to device from payload package.
 - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
 - WindowsServices: Configure/re-configure Windows Services.
 
@@ -141,6 +143,8 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.9.0 | May 5. 2022*
 
 *Version 0.9.8.6 | April 21. 2022*
 
