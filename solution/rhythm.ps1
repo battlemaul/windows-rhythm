@@ -493,7 +493,7 @@ process {
         foreach ($windowsExecutable in $windowsExecutables) {
             fLogContent -fLogContent "Processing $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
             fLogContent -fLogContent "$($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
-            #region :: Expanding Windows Environment Variables
+            #region :: Expanding Windows environment variables
             if ($($windowsExecutable.filePath) -match "%\S+%") {
                 #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
                 if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
@@ -723,7 +723,7 @@ process {
             }
             #endregion
             if ($($([environment]::OSVersion.Version).Build) -ge $([int]$windowsFileItem.minOSbuild) -and $($([environment]::OSVersion.Version).Build) -le $([int]$windowsFileItem.maxOSbuild)) {
-                #region :: Expanding Windows Environment Variables
+                #region :: Expanding Windows environment variables
                 if ($($windowsFileItem.targetFile) -match "%\S+%") {
                     #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
                     if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
