@@ -499,7 +499,7 @@ process {
                 if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
                     fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
                     $windowsExecutable.filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
-                    fLogContent -fLogContent "Windows Environment Variables resolved to $windowsExecutable.filePath." -fLogContentComponent "windowsExecutables"
+                    fLogContent -fLogContent "Windows Environment Variables resolved to $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
                 }
                 else {
                     fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
@@ -525,17 +525,17 @@ process {
             }
             #endregion
             #region :: executing item
-            if (Test-Path $filePath) {
+            if (Test-Path $($windowsExecutable.filePath)) {
                 fLogContent -fLogContent "File path $($windowsExecutable.filePath) exists." -fLogContentComponent "windowsExecutables"
                 try {
                     if ($($windowsExecutable.ArgumentList)) {
                         fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
-                        Start-Process -FilePath $filePath -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
+                        Start-Process -FilePath $($windowsExecutable.filePath) -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
 
                     }
                     else {
                         fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with no arguments." -fLogContentComponent "windowsExecutables"
-                        Start-Process -FilePath $filePath -NoNewWindow -Wait
+                        Start-Process -FilePath $($windowsExecutable.filePath) -NoNewWindow -Wait
                     }
                 }
                 catch {
