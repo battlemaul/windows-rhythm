@@ -1,15 +1,15 @@
 ---
 Title: README
-Date: April 21, 2022
+Date: May 5, 2022
 Author: dotjesper
 Status: In development
 ---
 
 # Windows rhythm
 
-[![Built with Visual Studio Code](https://img.shields.io/badge/Built%20with-Visual%20Studio%20Code-blue?style=flat)](https://code.visualstudio.com/ "Built with Visual Studio Code")
-[![Built for Windows 11](https://img.shields.io/badge/Buidt%20for-Windows%2011-blue?style=flat)](https://windows.com/ "Built for Windows 11")
-[![Built for Windows 10](https://img.shields.io/badge/Built%20for-Windows%2010-blue?style=flat)](https://windows.com/ "Built for Windows 10")
+[![Built for Windows 11](https://img.shields.io/badge/Built%20for%20Windows%2011-Yes-blue?style=flat)](https://windows.com/ "Built for Windows 11")
+[![Built for Windows 10](https://img.shields.io/badge/Built%20for%20Windows%2010-Yes-blue?style=flat)](https://windows.com/ "Built for Windows 10")
+[![Built for Windows Autopilot](https://img.shields.io/badge/Built%20for%20Windows%20Autopilot-Yes-blue?style=flat)](https://docs.microsoft.com/en-us/mem/autopilot/windows-autopilot/ "Windows Autopilot")
 
 [![PSScriptAnalyzer verified](https://img.shields.io/badge/PowerShell%20Script%20Analyzer%20verified-Yes-green?style=flat)](https://www.powershellgallery.com/packages/PSScriptAnalyzer/ "PowerShell Script Analyzer")
 [![PowerShell Constrained Language mode verified](https://img.shields.io/badge/PowerShell%20Constrained%20Language%20mode%20verified-Yes-green?style=flat)](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_language_modes/ "PowerShell Language mode")
@@ -48,9 +48,11 @@ The mindset of the solution will aim to allow to limit and/or combine the functi
 ## Current features
 
 - WindowsApps: Remove Windows In-box Apps and Store Apps.
-- WindowsExecutables: Download and/or run executables. **NEW**
-- WindowsFeatures: Enabling and disabling Windows features.
-- WindowsOptionalFeature: Enabling and disabling Windows optional features.
+- WindowsExecutables: Download and/or run executables.
+- WindowsFeatures
+    - Enable and/or disable Windows features.
+    - Enable and/or disable Windows optional features.
+- WindowsFiles: Copy file(s) to device from payload package.
 - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
 - WindowsServices: Configure/re-configure Windows Services.
 
@@ -73,6 +75,7 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 │  ├─ baselineOfficeSettingsC.json
 │  ├─ baselineOfficeSettingsU.json
 ├─ solution
+│  ├─ assets.zip
 │  ├─ configC.json
 │  ├─ configU.json
 │  ├─ rhythm.ps1
@@ -141,6 +144,8 @@ The information and data of this repository and its contents are subject to chan
 <summary>Click to expand change log</summary>
 
 ---
+
+*Version 0.9.9.0 | May 5. 2022*
 
 *Version 0.9.8.6 | April 21. 2022*
 

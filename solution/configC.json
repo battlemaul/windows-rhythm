@@ -6,8 +6,8 @@
         "title": "Windows rhythm-DSC-SYSTEM",
         "description": "Windows desired state configuration",
         "url": "",
-        "version": "1.4.0.1",
-        "date": "2022-04-16",
+        "version": "1.5.0.1",
+        "date": "2022-04-29",
         "publisher": "dotjesper.com",
         "developer": "Jesper Nielsen"
     },
@@ -274,17 +274,28 @@
                 "State": "Disabled",
                 "RestartNeeded": false
             }
-        ]
-    },
-    "windowsOptionalFeatures": {
-        "enabled": true,
-        "features": [
+        ],
+        "optionalFeatures": [
             {
                 "Name": "Media.WindowsMediaPlayer~~~~0.0.12.0",
                 "DisplayName": "Windows Media Player",
                 "Description": "Play audio and video files on your local machine and on the Internet",
                 "State": "NotPresent",
                 "RestartNeeded": false
+            }
+        ]
+    },
+    "windowsFiles": {
+        "enabled": true,
+        "assetFile": "assets.zip",
+        "items": [
+            {
+                "name": "Windows Start Menu Layout Modification",
+                "description": "Windows Start Menu Layout Modification file copy",
+                "minOSbuild": "",
+                "maxOSbuild": "19044",
+                "sourceFile": "LayoutModification.xml",
+                "targetFile": "%SystemDrive%\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\Shell\\LayoutModification.xml"
             }
         ]
     },

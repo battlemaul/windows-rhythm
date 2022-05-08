@@ -1,10 +1,10 @@
 ﻿<# PSScriptInfo
-.VERSION 0.9.8.6
+.VERSION 0.9.9.0
 .GUID A86971BB-9C5B-4540-B5C7-13CCDDE330EB
 .AUTHOR @dotjesper
 .COMPANYNAME dotjesper.com
 .COPYRIGHT dotjesper.com
-.TAGS windows powershell-5 windows-10 windows-11 endpoint-manager branding
+.TAGS windows powershell-5 windows-10 windows-11 endpoint-manager branding DSC
 .LICENSEURI https://github.com/dotjesper/windows-rhythm/blob/main/LICENSE
 .PROJECTURI https://github.com/dotjesper/windows-rhythm
 .ICONURI
@@ -14,16 +14,18 @@
 #>
 <#
 .SYNOPSIS
-    Windows rhythm device baseline configurator.
+    Windows rhythm device baseline configurator (Windows Desired State Configuration).
 .DESCRIPTION
     The goal of Windows rhythm is to provide a consistent baseline configuration to end user devices in Windows Autopilot scenarios.
     Windows rhythm can easily be implemented using more traditionally deployment methods, like OSD or other methods utilized.
     Current features:
     - WindowsApps: Remove Windows In-box Apps and Store Apps.
     - WindowsExecutables: Download and/or run executables.
-    - WindowsFeatures: Enabling and disabling Windows features.
-    - WindowsOptionalFeature: Enabling and disabling Windows optional features.
-    - "indowsRegistry: Modifying Windows registry entries (add, change and remove).
+    - WindowsFeatures
+        - Enable and/or disable Windows features.
+        - Enable and/or disable Windows optional features.
+    - WindowsFiles: Copy file(s) to device from payload package.
+    - WindowsRegistry: Modifying Windows registry entries (add, change and remove).
     - WindowsServices: Configure/re-configure Windows Services.
     To download sample configuration files and follow the latest progress, visit the project site.
 .PARAMETER configFile
@@ -491,13 +493,13 @@ process {
         foreach ($windowsExecutable in $windowsExecutables) {
             fLogContent -fLogContent "Processing $($windowsExecutable.name)" -fLogContentComponent "windowsExecutables"
             fLogContent -fLogContent "$($windowsExecutable.description)" -fLogContentComponent "windowsExecutables"
-            #region :: Expanding Windows Environment Variables
+            #region :: Expanding Windows environment variables
             if ($($windowsExecutable.filePath) -match "%\S+%") {
                 #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
                 if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
                     fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
-                    $filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
-                    fLogContent -fLogContent "Windows Environment Variables resolved to $filePath." -fLogContentComponent "windowsExecutables"
+                    $windowsExecutable.filePath = [Environment]::ExpandEnvironmentVariables($windowsExecutable.filePath)
+                    fLogContent -fLogContent "Windows Environment Variables resolved to $($windowsExecutable.filePath)." -fLogContentComponent "windowsExecutables"
                 }
                 else {
                     fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
@@ -510,7 +512,7 @@ process {
             if ($($windowsExecutable.downloadUri)) {
                 fLogContent -fLogContent "Download Uri $($windowsExecutable.downloadUri)" -fLogContentComponent "windowsExecutables"
                 try {
-                    Invoke-WebRequest -Uri $($windowsExecutable.downloadUri) -OutFile $($filePath)
+                    Invoke-WebRequest -Uri $($windowsExecutable.downloadUri) -OutFile $($windowsExecutable.filePath)
                 }
                 catch {
                     $errMsg = $_.Exception.Message
@@ -523,17 +525,17 @@ process {
             }
             #endregion
             #region :: executing item
-            if (Test-Path $filePath) {
-                fLogContent -fLogContent "File path $($filePath) exists." -fLogContentComponent "windowsExecutables"
+            if (Test-Path $($windowsExecutable.filePath)) {
+                fLogContent -fLogContent "File path $($windowsExecutable.filePath) exists." -fLogContentComponent "windowsExecutables"
                 try {
                     if ($($windowsExecutable.ArgumentList)) {
-                        fLogContent -fLogContent "Executing $filePath with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
-                        Start-Process -FilePath $filePath -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
+                        fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with arguments $($windowsExecutable.ArgumentList)." -fLogContentComponent "windowsExecutables"
+                        Start-Process -FilePath $($windowsExecutable.filePath) -ArgumentList $($windowsExecutable.ArgumentList) -NoNewWindow -Wait
 
                     }
                     else {
-                        fLogContent -fLogContent "Executing $filePath with no arguments." -fLogContentComponent "windowsExecutables"
-                        Start-Process -FilePath $filePath -NoNewWindow -Wait
+                        fLogContent -fLogContent "Executing $($windowsExecutable.filePath) with no arguments." -fLogContentComponent "windowsExecutables"
+                        Start-Process -FilePath $($windowsExecutable.filePath) -NoNewWindow -Wait
                     }
                 }
                 catch {
@@ -546,7 +548,7 @@ process {
                 finally {}
             }
             else {
-                fLogContent -fLogContent "File not found [$filePath]" -fLogContentComponent "windowsExecutables"
+                fLogContent -fLogContent "File not found [$($windowsExecutable.filePath)]" -fLogContentComponent "windowsExecutables"
             }
             #endregion
         }
@@ -555,10 +557,12 @@ process {
         fLogContent -fLogContent "Windows Executables is disabled." -fLogContentComponent "windowsExecutables"
     }
     #endregion
+    #
     #region :: windowsFeatures
     fLogContent -fLogContent "WINDOWS FEATURES" -fLogContentComponent "windowsFeatures"
     if ($($config.windowsFeatures.enabled) -eq $true) {
         fLogContent -fLogContent "Windows Features is enabled." -fLogContentComponent "windowsFeatures"
+        #region :: windowsFeatures
         [array]$windowsFeatures = $($config.windowsFeatures.features)
         foreach ($windowsFeature in $windowsFeatures) {
             fLogContent -fLogContent "Processing $($windowsFeature.DisplayName)." -fLogContentComponent "windowsFeatures"
@@ -611,27 +615,10 @@ process {
                 finally {}
             }
         }
-    }
-    else {
-        fLogContent -fLogContent "Windows Features is disabled." -fLogContentComponent "windowsFeatures"
-    }
-    #endregion
-    #
-    #region :: windowsOptionalFeatures
-    fLogContent -fLogContent "WINDOWS OPTIONAL FEATURES" -fLogContentComponent "windowsOptionalFeatures"
-    if ($($config.windowsOptionalFeatures.enabled) -eq $true) {
-        fLogContent -fLogContent "Windows Optional Features is enabled." -fLogContentComponent "windowsOptionalFeatures"
-        try {
-            [array]$windowsOptionalFeatures = $($config.windowsOptionalFeatures.features)
-        }
-        catch {
-            $errMsg = $_.Exception.Message
-            fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsOptionalFeatures"
-            if ($exitOnError) {
-                exit 1
-            }
-        }
-        finally {}
+        #endregion
+        #region :: windowsOptionalFeatures
+        fLogContent -fLogContent "WINDOWS OPTIONAL FEATURES" -fLogContentComponent "windowsOptionalFeatures"
+        [array]$windowsOptionalFeatures = $($config.windowsFeatures.optionalFeatures)
         foreach ($windowsOptionalFeature in $windowsOptionalFeatures) {
             fLogContent -fLogContent "Processing $($windowsOptionalFeature.DisplayName)." -fLogContentComponent "windowsOptionalFeatures"
             [string]$featureState = $(Get-WindowsCapability -Online -Name $($windowsOptionalFeature.Name) -Verbose:$false).state
@@ -683,9 +670,101 @@ process {
                 }
             }
         }
+        #endregion
     }
     else {
-        fLogContent -fLogContent "Windows Optional Features is disabled." -fLogContentComponent "windowsOptionalFeatures"
+        fLogContent -fLogContent "Windows Features is disabled." -fLogContentComponent "windowsFeatures"
+    }
+    #endregion
+    #
+    #region :: windowsFiles
+    fLogContent -fLogContent "WINDOWS FILES" -fLogContentComponent "windowsFiles"
+    if ($($config.windowsFiles.enabled) -eq $true) {
+        fLogContent -fLogContent "Windows Files is enabled." -fLogContentComponent "windowsFiles"
+        #region :: Expand assets
+        [string]$assetFile = $($config.windowsFiles.assetFile)
+        if (Test-Path -Path $assetFile -PathType Leaf) {
+            fLogContent -fLogContent "Windows Files found $assetFile." -fLogContentComponent "windowsFiles"
+            fLogContent -fLogContent "Windows Files is expanding $((Get-Item $assetFile).FullName)." -fLogContentComponent "windowsFiles"
+            try {
+                Expand-Archive -Path "$assetFile" -DestinationPath "$($Env:TEMP)" -Force
+            }
+            catch {
+                $errMsg = $_.Exception.Message
+                fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFiles"
+                if ($exitOnError) {
+                    exit 1
+                }
+            }
+            finally {}
+        }
+        else {
+            fLogContent -fLogContent "$assetFile ($((Get-Item $assetFile).FullName)) not present." -fLogContentComponent "windowsFiles"
+        }
+        #endregion
+        [array]$windowsFileItems = $($config.windowsFiles.items)
+        foreach ($windowsFileItem in $windowsFileItems) {
+            fLogContent -fLogContent "Processing $($windowsFileItem.name)." -fLogContentComponent "windowsFiles"
+            fLogContent -fLogContent "$($windowsFileItem.description)" -fLogContentComponent "windowsFiles"
+            #region :: Build validation
+            if ($([int]$windowsFileItem.minOSbuild) -eq 0) {
+                fLogContent -fLogContent "minOSbuild: not specified" -fLogContentComponent "windowsFiles"
+                [int]$windowsFileItem.minOSbuild = $($([environment]::OSVersion.Version).Build)
+            }
+            else {
+                fLogContent -fLogContent "minOSbuild: $($windowsFileItem.minOSbuild)" -fLogContentComponent "windowsFiles"
+            }
+            if ($([int]$windowsFileItem.maxOSbuild) -eq 0) {
+                fLogContent -fLogContent "maxOSbuild: not specified" -fLogContentComponent "windowsFiles"
+                [int]$windowsFileItem.maxOSbuild = $($([environment]::OSVersion.Version).Build)
+            }
+            else {
+                fLogContent -fLogContent "maxOSbuild: $($windowsFileItem.maxOSbuild)" -fLogContentComponent "windowsFiles"
+            }
+            #endregion
+            if ($($([environment]::OSVersion.Version).Build) -ge $([int]$windowsFileItem.minOSbuild) -and $($([environment]::OSVersion.Version).Build) -le $([int]$windowsFileItem.maxOSbuild)) {
+                #region :: Expanding Windows environment variables
+                if ($($windowsFileItem.targetFile) -match "%\S+%") {
+                    #[Environment]::ExpandEnvironmentVariables does not work in Constrained language mode - workaround to be explored.
+                    if ($($ExecutionContext.SessionState.LanguageMode) -eq "FullLanguage") {
+                        fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsFileItem.targetFile)." -fLogContentComponent "windowsExecutables"
+                        $windowsFileItem.targetFile = [Environment]::ExpandEnvironmentVariables($windowsFileItem.targetFile)
+                        fLogContent -fLogContent "Windows Environment Variables resolved to $($windowsFileItem.targetFile)." -fLogContentComponent "windowsExecutables"
+                    }
+                    else {
+                        fLogContent -fLogContent "Windows Environment Variables is curently supported using Full Language mode only." -fLogContentComponent "windowsExecutables"
+                        fLogContent -fLogContent "Windows Environment Variables found, resolving $($windowsFileItem.targetFile) terminated." -fLogContentComponent "windowsExecutables"
+                        Continue
+                    }
+                }
+                #endregion
+                #region :: File copy process
+                try {
+                    if (Test-Path -Path "$($Env:TEMP)\$($windowsFileItem.sourceFile)" -PathType Leaf) {
+                        fLogContent -fLogContent "$($Env:TEMP)\$($windowsFileItem.sourceFile) exist. Copying file to $($windowsFileItem.targetFile)." -fLogContentComponent "windowsExecutables"
+                        Copy-Item -Path "$($Env:TEMP)\$($windowsFileItem.sourceFile)" -Destination "$($windowsFileItem.targetFile)" -Force
+                    }
+                    else {
+                        fLogContent -fLogContent "$($Env:TEMP)\$($windowsFileItem.sourceFile) not found. File copy canceled." -fLogContentComponent "windowsExecutables"
+                    }
+                }
+                catch {
+                    $errMsg = $_.Exception.Message
+                    fLogContent -fLogContent "ERROR: $errMsg" -fLogContentComponent "windowsFiles"
+                    if ($exitOnError) {
+                        exit 1
+                    }
+                }
+                finally {}
+                #endregion
+            }
+            else {
+                fLogContent -fLogContent "item $($windowsFileItem.description) entry not for this OS build." -fLogContentComponent "windowsFiles"
+            }
+        }
+    }
+    else {
+        fLogContent -fLogContent "Windows Files is disabled." -fLogContentComponent "windowsFiles"
     }
     #endregion
     #
@@ -842,11 +921,12 @@ end {
     fLogContent -fLogContent "Cleaning up environment" -fLogContentComponent "clean-up"
     #endregion
 }
+
 # SIG # Begin signature block
-# MIIj9wYJKoZIhvcNAQcCoIIj6DCCI+QCAQExDzANBglghkgBZQMEAgEFADB5Bgor
+# MIIj9gYJKoZIhvcNAQcCoIIj5zCCI+MCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDDMIm7fKqJ6IWZ
-# Nhy4pjL0kiXAJkOm2nJi0l9ygv5tk6CCDnAwggawMIIEmKADAgECAhAIrUCyYNKc
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDcXHtgm+41UNPq
+# SUz0OOw/XTekYoN39RO8rgNq1ZoIfaCCDnAwggawMIIEmKADAgECAhAIrUCyYNKc
 # TJ9ezam9k67ZMA0GCSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNV
 # BAMTGERpZ2lDZXJ0IFRydXN0ZWQgUm9vdCBHNDAeFw0yMTA0MjkwMDAwMDBaFw0z
@@ -923,116 +1003,116 @@ end {
 # zz5ES40hfefEL0LezG6KO5wWoP6aiogA7CL/Qz3UkLa9foS0cAa8kj09mC9RuwiR
 # dJlfUvX4KwZzFaHtrOZJaAUkqwUDQbEPZ3GTCuQt8lLBpNmOu+GKVTyui/lj8+LZ
 # mm0el1qMnyzzWa3yU+LbdVjo5p7AaoZtJrySzM4G73UblmY7c8/ark4g9hQa7QKs
-# EF/lwAgJg68p4sDM7R4UrteLSrPvfanIQxIxghTdMIIU2QIBATB9MGkxCzAJBgNV
+# EF/lwAgJg68p4sDM7R4UrteLSrPvfanIQxIxghTcMIIU2AIBATB9MGkxCzAJBgNV
 # BAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNl
 # cnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEzODQgMjAyMSBD
 # QTECEAgu2XDYxnvTyKkUKOyKKGYwDQYJYIZIAWUDBAIBBQCgfDAQBgorBgEEAYI3
 # AgEMMQIwADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgEL
-# MQ4wDAYKKwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQgp5sEKXfS4uEKvHH3+9VW
-# CRcwMI/6Hi5O4Ep4yKHWrOUwDQYJKoZIhvcNAQEBBQAEggIAe3h8DIu9s+V4EKas
-# WzAt/uEK2RuAvi+1zZqlEBPdfr1ub9LtE9rnWiw1QxWQIstIoXhw8lCu/ZIKVBxF
-# N1rpSMWh8ErzAYWg6ldOb3FjWpy1UI3JtxCQJjy4eJkh65jLTvHX5Pe0t8OPkOnG
-# uBYr5WW3ukZ5NfGPVkZKdhJjQ76zozpFJme+BT934HcaT2QfDOfgcJC6MN30/i6D
-# b+JuF/3yIKLZy6c8GNG+4J5Ei6gYaCQjJm6gjx7kkDqI7gNob3zLcExRm8kS3SGj
-# b4NpBrIzeA2f864pZmtFddCCsP2lSzdsGTJ+StHVdV3BeOaYbAdOZZi3RUZo57R5
-# i9l+uNwJuF9EIrn0fJRnkrCmHwEhwliNXxFVZZQAtRC7jWBCyQwkrmFdLFhQpknO
-# V8sFcoy8BXEJtMNqCS5qJSPOgqYSBMwMrZO6XwYErd4aeoKPogtlK0okwNRtfwdY
-# AnHEy4MzVjqDkGFQLHYMkoDDuOjWCfKTawJXvWIcVl4ZduOo1AX2c05qh67k2Bxg
-# RdHCfxBiLG5caYYWBRXiiYKp5jX3JiZAjsqfdMcViwgjCnSzYXKQAv0JUqCPDXhz
-# am7vQiHx41sOXGWntLnyAH2etXShBljwdPFruiUeVTROEM70odTw4OzcHBsfEdrD
-# L0McPzuR2y5vFhQHzAghn7V+F9ahghGzMIIRrwYKKwYBBAGCNwMDATGCEZ8wghGb
-# BgkqhkiG9w0BBwKgghGMMIIRiAIBAzEPMA0GCWCGSAFlAwQCAQUAMHgGCyqGSIb3
-# DQEJEAEEoGkEZzBlAgEBBglghkgBhv1sBwEwMTANBglghkgBZQMEAgEFAAQg9BZc
-# gSnL9oKb4XdNOpEXl28Po8sNtofoxMgs4lO5rakCEQDBLv/EnK2jEBJgpstim+kU
-# GA8yMDIyMDQyODE1NDA0Mlqggg18MIIGxjCCBK6gAwIBAgIQCnpKiJ7JmUKQBmM4
-# TYaXnTANBgkqhkiG9w0BAQsFADBjMQswCQYDVQQGEwJVUzEXMBUGA1UEChMORGln
-# aUNlcnQsIEluYy4xOzA5BgNVBAMTMkRpZ2lDZXJ0IFRydXN0ZWQgRzQgUlNBNDA5
-# NiBTSEEyNTYgVGltZVN0YW1waW5nIENBMB4XDTIyMDMyOTAwMDAwMFoXDTMzMDMx
-# NDIzNTk1OVowTDELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMu
-# MSQwIgYDVQQDExtEaWdpQ2VydCBUaW1lc3RhbXAgMjAyMiAtIDIwggIiMA0GCSqG
-# SIb3DQEBAQUAA4ICDwAwggIKAoICAQC5KpYjply8X9ZJ8BWCGPQz7sxcbOPgJS7S
-# MeQ8QK77q8TjeF1+XDbq9SWNQ6OB6zhj+TyIad480jBRDTEHukZu6aNLSOiJQX8N
-# stb5hPGYPgu/CoQScWyhYiYB087DbP2sO37cKhypvTDGFtjavOuy8YPRn80JxblB
-# akVCI0Fa+GDTZSw+fl69lqfw/LH09CjPQnkfO8eTB2ho5UQ0Ul8PUN7UWSxEdMAy
-# Rxlb4pguj9DKP//GZ888k5VOhOl2GJiZERTFKwygM9tNJIXogpThLwPuf4UCyYbh
-# 1RgUtwRF8+A4vaK9enGY7BXn/S7s0psAiqwdjTuAaP7QWZgmzuDtrn8oLsKe4AtL
-# yAjRMruD+iM82f/SjLv3QyPf58NaBWJ+cCzlK7I9Y+rIroEga0OJyH5fsBrdGb2f
-# dEEKr7mOCdN0oS+wVHbBkE+U7IZh/9sRL5IDMM4wt4sPXUSzQx0jUM2R1y+d+/zN
-# scGnxA7E70A+GToC1DGpaaBJ+XXhm+ho5GoMj+vksSF7hmdYfn8f6CvkFLIW1oGh
-# ytowkGvub3XAsDYmsgg7/72+f2wTGN/GbaR5Sa2Lf2GHBWj31HDjQpXonrubS7Li
-# tkE956+nGijJrWGwoEEYGU7tR5thle0+C2Fa6j56mJJRzT/JROeAiylCcvd5st2E
-# 6ifu/n16awIDAQABo4IBizCCAYcwDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQC
-# MAAwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwgwIAYDVR0gBBkwFzAIBgZngQwBBAIw
-# CwYJYIZIAYb9bAcBMB8GA1UdIwQYMBaAFLoW2W1NhS9zKXaaL3WMaiCPnshvMB0G
-# A1UdDgQWBBSNZLeJIf5WWESEYafqbxw2j92vDTBaBgNVHR8EUzBRME+gTaBLhklo
-# dHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkRzRSU0E0MDk2
-# U0hBMjU2VGltZVN0YW1waW5nQ0EuY3JsMIGQBggrBgEFBQcBAQSBgzCBgDAkBggr
-# BgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMFgGCCsGAQUFBzAChkxo
-# dHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkRzRSU0E0
-# MDk2U0hBMjU2VGltZVN0YW1waW5nQ0EuY3J0MA0GCSqGSIb3DQEBCwUAA4ICAQAN
-# LSN0ptH1+OpLmT8B5PYM5K8WndmzjJeCKZxDbwEtqzi1cBG/hBmLP13lhk++kzre
-# KjlaOU7YhFmlvBuYquhs79FIaRk4W8+JOR1wcNlO3yMibNXf9lnLocLqTHbKodyh
-# K5a4m1WpGmt90fUCCU+C1qVziMSYgN/uSZW3s8zFp+4O4e8eOIqf7xHJMUpYtt84
-# fMv6XPfkU79uCnx+196Y1SlliQ+inMBl9AEiZcfqXnSmWzWSUHz0F6aHZE8+RokW
-# YyBry/J70DXjSnBIqbbnHWC9BCIVJXAGcqlEO2lHEdPu6cegPk8QuTA25POqaQmo
-# i35komWUEftuMvH1uzitzcCTEdUyeEpLNypM81zctoXAu3AwVXjWmP5UbX9xqUga
-# eN1Gdy4besAzivhKKIwSqHPPLfnTI/KeGeANlCig69saUaCVgo4oa6TOnXbeqXOq
-# SGpZQ65f6vgPBkKd3wZolv4qoHRbY2beayy4eKpNcG3wLPEHFX41tOa1DKKZpdcV
-# azUOhdbgLMzgDCS4fFILHpl878jIxYxYaa+rPeHPzH0VrhS/inHfypex2EfqHIXg
-# RU4SHBQpWMxv03/LvsEOSm8gnK7ZczJZCOctkqEaEf4ymKZdK5fgi9OczG21Da5H
-# YzhHF1tvE9pqEG4fSbdEW7QICodaWQR2EaGndwITHDCCBq4wggSWoAMCAQICEAc2
-# N7ckVHzYR6z9KGYqXlswDQYJKoZIhvcNAQELBQAwYjELMAkGA1UEBhMCVVMxFTAT
-# BgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEh
-# MB8GA1UEAxMYRGlnaUNlcnQgVHJ1c3RlZCBSb290IEc0MB4XDTIyMDMyMzAwMDAw
-# MFoXDTM3MDMyMjIzNTk1OVowYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lD
-# ZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYg
-# U0hBMjU2IFRpbWVTdGFtcGluZyBDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCC
-# AgoCggIBAMaGNQZJs8E9cklRVcclA8TykTepl1Gh1tKD0Z5Mom2gsMyD+Vr2EaFE
-# FUJfpIjzaPp985yJC3+dH54PMx9QEwsmc5Zt+FeoAn39Q7SE2hHxc7Gz7iuAhIoi
-# GN/r2j3EF3+rGSs+QtxnjupRPfDWVtTnKC3r07G1decfBmWNlCnT2exp39mQh0YA
-# e9tEQYncfGpXevA3eZ9drMvohGS0UvJ2R/dhgxndX7RUCyFobjchu0CsX7LeSn3O
-# 9TkSZ+8OpWNs5KbFHc02DVzV5huowWR0QKfAcsW6Th+xtVhNef7Xj3OTrCw54qVI
-# 1vCwMROpVymWJy71h6aPTnYVVSZwmCZ/oBpHIEPjQ2OAe3VuJyWQmDo4EbP29p7m
-# O1vsgd4iFNmCKseSv6De4z6ic/rnH1pslPJSlRErWHRAKKtzQ87fSqEcazjFKfPK
-# qpZzQmiftkaznTqj1QPgv/CiPMpC3BhIfxQ0z9JMq++bPf4OuGQq+nUoJEHtQr8F
-# nGZJUlD0UfM2SU2LINIsVzV5K6jzRWC8I41Y99xh3pP+OcD5sjClTNfpmEpYPtMD
-# iP6zj9NeS3YSUZPJjAw7W4oiqMEmCPkUEBIDfV8ju2TjY+Cm4T72wnSyPx4Jduyr
-# XUZ14mCjWAkBKAAOhFTuzuldyF4wEr1GnrXTdrnSDmuZDNIztM2xAgMBAAGjggFd
-# MIIBWTASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBS6FtltTYUvcyl2mi91
-# jGogj57IbzAfBgNVHSMEGDAWgBTs1+OC0nFdZEzfLmc/57qYrhwPTzAOBgNVHQ8B
-# Af8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwgwdwYIKwYBBQUHAQEEazBpMCQG
-# CCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wQQYIKwYBBQUHMAKG
-# NWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRydXN0ZWRSb290
-# RzQuY3J0MEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNv
-# bS9EaWdpQ2VydFRydXN0ZWRSb290RzQuY3JsMCAGA1UdIAQZMBcwCAYGZ4EMAQQC
-# MAsGCWCGSAGG/WwHATANBgkqhkiG9w0BAQsFAAOCAgEAfVmOwJO2b5ipRCIBfmbW
-# 2CFC4bAYLhBNE88wU86/GPvHUF3iSyn7cIoNqilp/GnBzx0H6T5gyNgL5Vxb122H
-# +oQgJTQxZ822EpZvxFBMYh0MCIKoFr2pVs8Vc40BIiXOlWk/R3f7cnQU1/+rT4os
-# equFzUNf7WC2qk+RZp4snuCKrOX9jLxkJodskr2dfNBwCnzvqLx1T7pa96kQsl3p
-# /yhUifDVinF2ZdrM8HKjI/rAJ4JErpknG6skHibBt94q6/aesXmZgaNWhqsKRcnf
-# xI2g55j7+6adcq/Ex8HBanHZxhOACcS2n82HhyS7T6NJuXdmkfFynOlLAlKnN36T
-# U6w7HQhJD5TNOXrd/yVjmScsPT9rp/Fmw0HNT7ZAmyEhQNC3EyTN3B14OuSereU0
-# cZLXJmvkOHOrpgFPvT87eK1MrfvElXvtCl8zOYdBeHo46Zzh3SP9HSjTx/no8Zhf
-# +yvYfvJGnXUsHicsJttvFXseGYs2uJPU5vIXmVnKcPA3v5gA3yAWTyf7YGcWoWa6
-# 3VXAOimGsJigK+2VQbc61RWYMbRiCQ8KvYHZE/6/pNHzV9m8BPqC3jLfBInwAM1d
-# wvnQI38AC+R2AibZ8GV2QqYphwlHK+Z/GqSFD/yYlvZVVCsfgPrA8g4r5db7qS9E
-# FUrnEw4d2zc4GqEr9u3WfPwxggN2MIIDcgIBATB3MGMxCzAJBgNVBAYTAlVTMRcw
-# FQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE7MDkGA1UEAxMyRGlnaUNlcnQgVHJ1c3Rl
-# ZCBHNCBSU0E0MDk2IFNIQTI1NiBUaW1lU3RhbXBpbmcgQ0ECEAp6SoieyZlCkAZj
-# OE2Gl50wDQYJYIZIAWUDBAIBBQCggdEwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJ
-# EAEEMBwGCSqGSIb3DQEJBTEPFw0yMjA0MjgxNTQwNDJaMCsGCyqGSIb3DQEJEAIM
-# MRwwGjAYMBYEFIUI84ZRXLPTB322tLfAfxtKXkHeMC8GCSqGSIb3DQEJBDEiBCA2
-# 3QbEf272CsTnIjJMiQ6vwYIzlDVBBA2gjnlHzpwkGTA3BgsqhkiG9w0BCRACLzEo
-# MCYwJDAiBCCdppAVw0nGwYl4Rbo1gq1wyI+kKTvbar6cK9JTknnmOzANBgkqhkiG
-# 9w0BAQEFAASCAgCLtakFBlYnNtap8hy9ClygGug+MRsl1nAFiqsP8dK/FIWUhKLX
-# suJahgs5eMlQDDZ0lg1RgNn+T4yWAuhnOSHYvlTIerGl6IvaXBSYNagc5IC5RyyQ
-# FPfdGs+1/7icciJ60sxYt1Nwkd2sGXnglC6OREyTImzOKg8alOsK/4qmhgoNRyux
-# Zn86sQTQVCou/HFIS0zu78STtPzfg3kafkt0OVO+jaD2nTa8WLgjTYvybjNow04z
-# ndcWc0ROWTOz7MVmq5+Lw/790H1nGOJv4AsTj4f1h1cc4ZCgX1pxMPsJLqxulyRg
-# dirLG3SSJ7e4IXDiACDcoY8205VMxoJQB2za8m/6CtkWzya22jwx+HfquJnSg4I7
-# vbXuR2tvaMRQxXbZmIfuLRnadE5IGgMNBwQBXZ+37H1KS/JAfhv4XHC+emvcIJvy
-# Gw/IVXQWaczsET0yMWYCkFj80/sd1h7OKYoQ6/XgDpXBxFaCAMbE1N7rQ6fbQ1d8
-# 1734xu9duXkEFrK+g6Y+S7Q/4J6Bs8b7p6DL4nGVdDJHyF5nJAQz/ENHDwESAhPN
-# swDKLc52+A4g2mEr57BA5LEuSaXgAaJ4krKJOR/ZdbosTRVhHVyJL1H9duSDGvLS
-# ihdoXF326Snc1Mi0DGKIsNuTA0RTYhA5gf52FD31OdK+9vsL4E7pm/Y2xw==
+# MQ4wDAYKKwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQgmI+U3xsA+t3HbRutcB8Z
+# V5iZzepyBnm6JNawMV9nGsEwDQYJKoZIhvcNAQEBBQAEggIAaDQ652ZTZmueHoGq
+# e2EohyVdc3yPJLq1op8m39EPzrzRgLiP14x2TNiAjv1pTfo9P+gMJEgAglfvdnAD
+# w+/mf5VUkBP3fBatRjfIJ0eGUZafGDTxK+6HD+hpd00CsC5/yeXfpJuyuNb5mBr3
+# GVOqmbVjYqKJMyiyJCuq0XVsv5s7HrzN9PPk49eTNEaIyPM0weZ3RmoGGAKZsCr6
+# HHZkaGI8Y/H5ch6mHFX76FHyMWPrnoGANvr6TSKFdXKuPZmLphvGz5PH1ZhGZYtk
+# /qKSymkbZQnohkRXfJB8wc6OzSX0VhRESk2jZjhcGhhWstWMJQla/X4bA5J+vk3m
+# qR15MD6SQfEimuOi+EgSggUEtOSpO/+7JKC1la+Cuu/dciyoauANimT7aA3ZnP53
+# m3ASncW5sHbyeGDCg5lVf4ySK7xIKAx4eSxePl1OqfBFUowj9AqOYi7iAoqtWlsQ
+# g9BZ6c8OF4715z+a7C1rJCIrthXCTczWA6iM0jfQWYYPvjUe3YX9ygUDgvUurM/O
+# rpdL+DBfQ/PknxwORWLL7v+cZF71jzibyd2fY+ZjYCh54xqoJkViA96YWkUUfwHQ
+# XvBeUm/xRIewCA16wGrHBOfif026+cw1jtEarPYI8p5Brb/JMhir8X0qeLnjIwJL
+# fDgfb/0pmK4/FoLLG644gv9Ge32hghGyMIIRrgYKKwYBBAGCNwMDATGCEZ4wghGa
+# BgkqhkiG9w0BBwKgghGLMIIRhwIBAzEPMA0GCWCGSAFlAwQCAQUAMHcGCyqGSIb3
+# DQEJEAEEoGgEZjBkAgEBBglghkgBhv1sBwEwMTANBglghkgBZQMEAgEFAAQgVzis
+# yHr29bOTctFOcJZPmemI74kS/rEq/XCn1Biw558CEAS7Svky9GBSnDJML6g2XZAY
+# DzIwMjIwNTA4MTIyOTM4WqCCDXwwggbGMIIErqADAgECAhAKekqInsmZQpAGYzhN
+# hpedMA0GCSqGSIb3DQEBCwUAMGMxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
+# Q2VydCwgSW5jLjE7MDkGA1UEAxMyRGlnaUNlcnQgVHJ1c3RlZCBHNCBSU0E0MDk2
+# IFNIQTI1NiBUaW1lU3RhbXBpbmcgQ0EwHhcNMjIwMzI5MDAwMDAwWhcNMzMwMzE0
+# MjM1OTU5WjBMMQswCQYDVQQGEwJVUzEXMBUGA1UEChMORGlnaUNlcnQsIEluYy4x
+# JDAiBgNVBAMTG0RpZ2lDZXJ0IFRpbWVzdGFtcCAyMDIyIC0gMjCCAiIwDQYJKoZI
+# hvcNAQEBBQADggIPADCCAgoCggIBALkqliOmXLxf1knwFYIY9DPuzFxs4+AlLtIx
+# 5DxArvurxON4XX5cNur1JY1Do4HrOGP5PIhp3jzSMFENMQe6Rm7po0tI6IlBfw2y
+# 1vmE8Zg+C78KhBJxbKFiJgHTzsNs/aw7ftwqHKm9MMYW2Nq867Lxg9GfzQnFuUFq
+# RUIjQVr4YNNlLD5+Xr2Wp/D8sfT0KM9CeR87x5MHaGjlRDRSXw9Q3tRZLER0wDJH
+# GVvimC6P0Mo//8ZnzzyTlU6E6XYYmJkRFMUrDKAz200kheiClOEvA+5/hQLJhuHV
+# GBS3BEXz4Di9or16cZjsFef9LuzSmwCKrB2NO4Bo/tBZmCbO4O2ufyguwp7gC0vI
+# CNEyu4P6IzzZ/9KMu/dDI9/nw1oFYn5wLOUrsj1j6siugSBrQ4nIfl+wGt0ZvZ90
+# QQqvuY4J03ShL7BUdsGQT5TshmH/2xEvkgMwzjC3iw9dRLNDHSNQzZHXL537/M2x
+# wafEDsTvQD4ZOgLUMalpoEn5deGb6GjkagyP6+SxIXuGZ1h+fx/oK+QUshbWgaHK
+# 2jCQa+5vdcCwNiayCDv/vb5/bBMY38ZtpHlJrYt/YYcFaPfUcONCleieu5tLsuK2
+# QT3nr6caKMmtYbCgQRgZTu1Hm2GV7T4LYVrqPnqYklHNP8lE54CLKUJy93my3YTq
+# J+7+fXprAgMBAAGjggGLMIIBhzAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIw
+# ADAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDAgBgNVHSAEGTAXMAgGBmeBDAEEAjAL
+# BglghkgBhv1sBwEwHwYDVR0jBBgwFoAUuhbZbU2FL3MpdpovdYxqII+eyG8wHQYD
+# VR0OBBYEFI1kt4kh/lZYRIRhp+pvHDaP3a8NMFoGA1UdHwRTMFEwT6BNoEuGSWh0
+# dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRydXN0ZWRHNFJTQTQwOTZT
+# SEEyNTZUaW1lU3RhbXBpbmdDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMCQGCCsG
+# AQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wWAYIKwYBBQUHMAKGTGh0
+# dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRydXN0ZWRHNFJTQTQw
+# OTZTSEEyNTZUaW1lU3RhbXBpbmdDQS5jcnQwDQYJKoZIhvcNAQELBQADggIBAA0t
+# I3Sm0fX46kuZPwHk9gzkrxad2bOMl4IpnENvAS2rOLVwEb+EGYs/XeWGT76TOt4q
+# OVo5TtiEWaW8G5iq6Gzv0UhpGThbz4k5HXBw2U7fIyJs1d/2WcuhwupMdsqh3KEr
+# lribVakaa33R9QIJT4LWpXOIxJiA3+5JlbezzMWn7g7h7x44ip/vEckxSli23zh8
+# y/pc9+RTv24KfH7X3pjVKWWJD6KcwGX0ASJlx+pedKZbNZJQfPQXpodkTz5GiRZj
+# IGvL8nvQNeNKcEiptucdYL0EIhUlcAZyqUQ7aUcR0+7px6A+TxC5MDbk86ppCaiL
+# fmSiZZQR+24y8fW7OK3NwJMR1TJ4Sks3KkzzXNy2hcC7cDBVeNaY/lRtf3GpSBp4
+# 3UZ3Lht6wDOK+EoojBKoc88t+dMj8p4Z4A2UKKDr2xpRoJWCjihrpM6ddt6pc6pI
+# allDrl/q+A8GQp3fBmiW/iqgdFtjZt5rLLh4qk1wbfAs8QcVfjW05rUMopml1xVr
+# NQ6F1uAszOAMJLh8UgsemXzvyMjFjFhpr6s94c/MfRWuFL+Kcd/Kl7HYR+ocheBF
+# ThIcFClYzG/Tf8u+wQ5KbyCcrtlzMlkI5y2SoRoR/jKYpl0rl+CL05zMbbUNrkdj
+# OEcXW28T2moQbh9Jt0RbtAgKh1pZBHYRoad3AhMcMIIGrjCCBJagAwIBAgIQBzY3
+# tyRUfNhHrP0oZipeWzANBgkqhkiG9w0BAQsFADBiMQswCQYDVQQGEwJVUzEVMBMG
+# A1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSEw
+# HwYDVQQDExhEaWdpQ2VydCBUcnVzdGVkIFJvb3QgRzQwHhcNMjIwMzIzMDAwMDAw
+# WhcNMzcwMzIyMjM1OTU5WjBjMQswCQYDVQQGEwJVUzEXMBUGA1UEChMORGlnaUNl
+# cnQsIEluYy4xOzA5BgNVBAMTMkRpZ2lDZXJ0IFRydXN0ZWQgRzQgUlNBNDA5NiBT
+# SEEyNTYgVGltZVN0YW1waW5nIENBMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIIC
+# CgKCAgEAxoY1BkmzwT1ySVFVxyUDxPKRN6mXUaHW0oPRnkyibaCwzIP5WvYRoUQV
+# Ql+kiPNo+n3znIkLf50fng8zH1ATCyZzlm34V6gCff1DtITaEfFzsbPuK4CEiiIY
+# 3+vaPcQXf6sZKz5C3GeO6lE98NZW1OcoLevTsbV15x8GZY2UKdPZ7Gnf2ZCHRgB7
+# 20RBidx8ald68Dd5n12sy+iEZLRS8nZH92GDGd1ftFQLIWhuNyG7QKxfst5Kfc71
+# ORJn7w6lY2zkpsUdzTYNXNXmG6jBZHRAp8ByxbpOH7G1WE15/tePc5OsLDnipUjW
+# 8LAxE6lXKZYnLvWHpo9OdhVVJnCYJn+gGkcgQ+NDY4B7dW4nJZCYOjgRs/b2nuY7
+# W+yB3iIU2YIqx5K/oN7jPqJz+ucfWmyU8lKVEStYdEAoq3NDzt9KoRxrOMUp88qq
+# lnNCaJ+2RrOdOqPVA+C/8KI8ykLcGEh/FDTP0kyr75s9/g64ZCr6dSgkQe1CvwWc
+# ZklSUPRR8zZJTYsg0ixXNXkrqPNFYLwjjVj33GHek/45wPmyMKVM1+mYSlg+0wOI
+# /rOP015LdhJRk8mMDDtbiiKowSYI+RQQEgN9XyO7ZONj4KbhPvbCdLI/Hgl27Ktd
+# RnXiYKNYCQEoAA6EVO7O6V3IXjASvUaetdN2udIOa5kM0jO0zbECAwEAAaOCAV0w
+# ggFZMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFLoW2W1NhS9zKXaaL3WM
+# aiCPnshvMB8GA1UdIwQYMBaAFOzX44LScV1kTN8uZz/nupiuHA9PMA4GA1UdDwEB
+# /wQEAwIBhjATBgNVHSUEDDAKBggrBgEFBQcDCDB3BggrBgEFBQcBAQRrMGkwJAYI
+# KwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBBBggrBgEFBQcwAoY1
+# aHR0cDovL2NhY2VydHMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VHJ1c3RlZFJvb3RH
+# NC5jcnQwQwYDVR0fBDwwOjA4oDagNIYyaHR0cDovL2NybDMuZGlnaWNlcnQuY29t
+# L0RpZ2lDZXJ0VHJ1c3RlZFJvb3RHNC5jcmwwIAYDVR0gBBkwFzAIBgZngQwBBAIw
+# CwYJYIZIAYb9bAcBMA0GCSqGSIb3DQEBCwUAA4ICAQB9WY7Ak7ZvmKlEIgF+ZtbY
+# IULhsBguEE0TzzBTzr8Y+8dQXeJLKftwig2qKWn8acHPHQfpPmDI2AvlXFvXbYf6
+# hCAlNDFnzbYSlm/EUExiHQwIgqgWvalWzxVzjQEiJc6VaT9Hd/tydBTX/6tPiix6
+# q4XNQ1/tYLaqT5Fmniye4Iqs5f2MvGQmh2ySvZ180HAKfO+ovHVPulr3qRCyXen/
+# KFSJ8NWKcXZl2szwcqMj+sAngkSumScbqyQeJsG33irr9p6xeZmBo1aGqwpFyd/E
+# jaDnmPv7pp1yr8THwcFqcdnGE4AJxLafzYeHJLtPo0m5d2aR8XKc6UsCUqc3fpNT
+# rDsdCEkPlM05et3/JWOZJyw9P2un8WbDQc1PtkCbISFA0LcTJM3cHXg65J6t5TRx
+# ktcma+Q4c6umAU+9Pzt4rUyt+8SVe+0KXzM5h0F4ejjpnOHdI/0dKNPH+ejxmF/7
+# K9h+8kaddSweJywm228Vex4Ziza4k9Tm8heZWcpw8De/mADfIBZPJ/tgZxahZrrd
+# VcA6KYawmKAr7ZVBtzrVFZgxtGIJDwq9gdkT/r+k0fNX2bwE+oLeMt8EifAAzV3C
+# +dAjfwAL5HYCJtnwZXZCpimHCUcr5n8apIUP/JiW9lVUKx+A+sDyDivl1vupL0QV
+# SucTDh3bNzgaoSv27dZ8/DGCA3YwggNyAgEBMHcwYzELMAkGA1UEBhMCVVMxFzAV
+# BgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVk
+# IEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQCnpKiJ7JmUKQBmM4
+# TYaXnTANBglghkgBZQMEAgEFAKCB0TAaBgkqhkiG9w0BCQMxDQYLKoZIhvcNAQkQ
+# AQQwHAYJKoZIhvcNAQkFMQ8XDTIyMDUwODEyMjkzOFowKwYLKoZIhvcNAQkQAgwx
+# HDAaMBgwFgQUhQjzhlFcs9MHfba0t8B/G0peQd4wLwYJKoZIhvcNAQkEMSIEIPmf
+# zZwcSiqAhFnjfVh51aJlrI1R4RATz17xZovS9So5MDcGCyqGSIb3DQEJEAIvMSgw
+# JjAkMCIEIJ2mkBXDScbBiXhFujWCrXDIj6QpO9tqvpwr0lOSeeY7MA0GCSqGSIb3
+# DQEBAQUABIICAKsedKlX1WbVdbmBDMJSIcuG/1dwzHTp6OGh4TS5edZr1qdKVJgV
+# St+Li4VsvEgZMcZw+xvOpOFSTlKU36EQwgzuwwLOs9i7D/n0y9qanpvwgFTQmwj0
+# zw9BN1mHXjOXUUq2El6319oqgBn6wABq2Klxzv8gq5dpp+auJ6n07x8AfKDUbD0Z
+# ZaKgOBl5KU5FhXwDTCxFVN3LdObQoWYzjSUfbr7oFdLCwnjhbjlXX7ZCVLZP1v7z
+# vgRQQbhr9BQtkBLclHzAMyMuu1znpZv905OGDCIQF0btdvyqNsaA5ym0AdALEIMc
+# VZjJ8K5lrhSJerUT4OHRouawrtE/mRaYcIuOJe3Z/CLA0bkaKCFGhEBPWZGJODn3
+# 5NCKzje20jliG3SeLSu212zSiW0a2dRAncwFkvKVKOUlUmKpA2SvLvnmouQANB0A
+# nq1HRnxgRWRmNogiOqMplun6N6jMty5xhN/mmy2BrEdTlQxgRJG2WQmTaWURaxwr
+# ggWnVBUaEkEYreKOTiLaESdZtsDfKMeG0T3vePzvPcKJSvvI7RAdxUNK8OT3XFqb
+# f65jxoz5sxM5C0aedsSwIn5jaVOrO3irWrlBukojQxx6p1g8lHjyzYIAVrc05+oA
+# svEV/d20S46T9vn9M/mgP2SM9CpgzjNZ162CmvPu5Odtey5HC6qnaFMl
 # SIG # End signature block
