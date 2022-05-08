@@ -75,6 +75,7 @@ Windows rhythm is developed and tested for Windows 10 21H1 Pro and Enterprise 64
 │  ├─ baselineOfficeSettingsC.json
 │  ├─ baselineOfficeSettingsU.json
 ├─ solution
+│  ├─ assets.zip
 │  ├─ configC.json
 │  ├─ configU.json
 │  ├─ rhythm.ps1
