@@ -290,11 +290,19 @@
         "assetFile": "assets.zip",
         "items": [
             {
-                "name": "Windows Start Menu Layout Modification",
+                "name": "Windows 10 Start Menu Layout Modification",
                 "description": "Windows Start Menu Layout Modification file copy",
                 "minOSbuild": "",
                 "maxOSbuild": "19044",
-                "sourceFile": "LayoutModification.xml",
+                "sourceFile": "LayoutModification-W10.xml",
+                "targetFile": "%SystemDrive%\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\Shell\\LayoutModification.xml"
+            },
+            {
+                "name": "Windows 11 Taskbar Layout Modification",
+                "description": "Windows Start Menu Layout Modification file copy",
+                "minOSbuild": "22000",
+                "maxOSbuild": "",
+                "sourceFile": "LayoutModification-W11.xml",
                 "targetFile": "%SystemDrive%\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\Shell\\LayoutModification.xml"
             }
         ]
