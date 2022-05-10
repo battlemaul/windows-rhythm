@@ -1,36 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LayoutModificationTemplate
     xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification"
     xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout"
     xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" Version="1"
     xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1">
-    <LayoutOptions StartTileGroupCellWidth="6" />
-    <DefaultLayoutOverride>
-        <StartLayoutCollection>
-            <defaultlayout:StartLayout GroupCellWidth="6">
-                <start:Group Name="Productivity">
-                    <start:Folder Name="Microsoft 365 Apps" Size="2x2" Column="0" Row="0">
-                        <start:DesktopApplicationTile Size="2x2" Column="0" Row="2" DesktopApplicationLinkPath="%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk" />
-                        <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge" TileID="6501008900" DisplayName="" Size="2x2" Column="4" Row="0" Arguments="-contentTile -url 0 https://excel.office.com" Square71x71LogoUri="ms-appdata:///local/PinnedTiles/6501008900/tinytile.png" Square150x150LogoUri="ms-appdata:///local/PinnedTiles/6501008900/squaretile.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#ff404040" ForegroundText="light" />
-                        <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge" TileID="7603651830" DisplayName="" Size="2x2" Column="2" Row="0" Arguments="-contentTile -url 0 https://word.office.com" Square71x71LogoUri="ms-appdata:///local/PinnedTiles/7603651830/tinytile.png" Square150x150LogoUri="ms-appdata:///local/PinnedTiles/7603651830/squaretile.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#ff404040" ForegroundText="light" />
-                        <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge" TileID="26310719480" DisplayName="" Size="2x2" Column="0" Row="0" Arguments="-contentTile -url 0 https://outlook.com" Square71x71LogoUri="ms-appdata:///local/PinnedTiles/26310719480/tinytile.png" Square150x150LogoUri="ms-appdata:///local/PinnedTiles/26310719480/squaretile.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#ff404040" ForegroundText="light" />
-                        <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge" TileID="38975140460" DisplayName="" Size="2x2" Column="2" Row="2" Arguments="-contentTile -url 0 https://powerpoint.office.com" Square71x71LogoUri="ms-appdata:///local/PinnedTiles/38975140460/tinytile.png" Square150x150LogoUri="ms-appdata:///local/PinnedTiles/38975140460/squaretile.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#ff404040" ForegroundText="light" />
-                    </start:Folder>
-                    <start:Tile Size="2x2" Column="4" Row="0" AppUserModelID="Microsoft.Whiteboard_8wekyb3d8bbwe!Whiteboard" />
-                    <start:DesktopApplicationTile Size="2x2" Column="2" Row="0" DesktopApplicationLinkPath="%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\Microsoft Edge.lnk" />
-                </start:Group>
-                <start:Group Name="Explore">
-                    <start:Tile Size="2x2" Column="0" Row="0" AppUserModelID="Microsoft.CompanyPortal_8wekyb3d8bbwe!App" />
-                    <start:Tile Size="2x2" Column="2" Row="0" AppUserModelID="Microsoft.GetHelp_8wekyb3d8bbwe!App" />
-                    <start:Tile Size="2x2" Column="4" Row="0" AppUserModelID="Microsoft.Getstarted_8wekyb3d8bbwe!App" />
-                </start:Group>
-                <start:Group Name="Links">
-                    <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App" TileID="MSEdge._pin_okkolgldfkhhglfopimelbaceh" DisplayName="" Size="1x1" Column="2" Row="0" Arguments=" --pin-url=https://www.google.com/ --profile-directory=Default --launch-tile" Square71x71LogoUri="ms-appx:///" Square150x150LogoUri="ms-appdata:///local/Pins/MSEdge._pin_okkolgldfkhhglfopimelbaceh/Logo.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#00777777" ForegroundText="light" />
-                    <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App" TileID="MSEdge._pin_mfhobgjhjechjhhejndfnfgpph" DisplayName="" Size="1x1" Column="0" Row="0" Arguments=" --pin-url=https://mysignins.microsoft.com/ --profile-directory=Default --launch-tile" Square71x71LogoUri="ms-appx:///" Square150x150LogoUri="ms-appdata:///local/Pins/MSEdge._pin_mfhobgjhjechjhhejndfnfgpph/Logo.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#00777777" ForegroundText="light" />
-                    <start:SecondaryTile AppUserModelID="Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!App" TileID="MSEdge._pin_mbfefonkpgdabgjoiopokelgkj" DisplayName="" Size="1x1" Column="1" Row="0" Arguments=" --pin-url=https://www.office.com/ --profile-directory=Default --launch-tile" Square71x71LogoUri="ms-appx:///" Square150x150LogoUri="ms-appdata:///local/Pins/MSEdge._pin_mbfefonkpgdabgjoiopokelgkj/Logo.png" Wide310x150LogoUri="ms-appx:///" Square310x310LogoUri="ms-appx:///" ShowNameOnSquare150x150Logo="true" ShowNameOnWide310x150Logo="false" BackgroundColor="#00777777" ForegroundText="light" />
-                </start:Group>
-            </defaultlayout:StartLayout>
-        </StartLayoutCollection>
-    </DefaultLayoutOverride>
     <CustomTaskbarLayoutCollection PinListPlacement="Replace">
         <defaultlayout:TaskbarLayout>
             <taskbar:TaskbarPinList>
