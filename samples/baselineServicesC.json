@@ -3,7 +3,7 @@
         "enabled": false,
         "installBehavior": "SYSTEM",
         "guid": "{C2511496-D83B-48E4-9636-FAB21CB47517}",
-        "title": "Windows rhythm",
+        "title": "Windows rhythm-DSC-SYSTEM",
         "description": "Baseline Windows Services configuration settings",
         "url": "",
         "version": "1.5.0.3",

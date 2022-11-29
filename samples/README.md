@@ -20,6 +20,31 @@ Target: Windows features
 
 Version: 1.5.0.3
 
+**baselineFileCopy.json**: Baseline Windows File Copy configuration settings.
+
+Install behavior: SYSTEM
+
+Target: Windows Files
+
+Version: 1.0.0.1
+
+**baselineFileExcute.json**: Windows desired state configuration - Windows executables.
+
+Install behavior: SYSTEM
+
+Target: Windows Files
+
+Version: 1.0.1.0
+
+
+**baselineFileExplorerSettingsU.json**: Baseline Windows configuration settings for File Explorer.
+
+Install behavior: USER
+
+Target: Windows registry
+
+Version: 1.1.0.3
+
 **baselineFileOpenBehaviorC.json**: Baseline Windows configuration settings for default file action (double click).
 
 Install behavior: SYSTEM
@@ -74,4 +99,4 @@ Install behavior: USER
 
 Target: Windows registry
 
-Version: 1.2.0.1
+Version: 1.5.0.3

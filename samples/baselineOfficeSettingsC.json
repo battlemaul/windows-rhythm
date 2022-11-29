@@ -3,7 +3,7 @@
         "enabled": false,
         "installBehavior": "SYSTEM",
         "guid": "{04723163-D300-4816-A7B6-EB884E7E79C3}",
-        "title": "Windows rhythm",
+        "title": "Windows rhythm-DSC-SYSTEM",
         "description": "PREVIEW: Baseline Microsoft 365 Apps setting - Computer",
         "url": "",
         "version": "0.9.1.0",

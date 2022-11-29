@@ -3,7 +3,7 @@
         "enabled": false,
         "installBehavior": "SYSTEM",
         "guid": "{1B2625C3-1906-4685-B711-009A928AB063}",
-        "title": "Windows rhythm",
+        "title": "Windows rhythm-DSC-SYSTEM",
         "description": "Baseline Windows Apps configuration settings",
         "url": "",
         "version": "0.9.1.0",
